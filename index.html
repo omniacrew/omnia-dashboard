@@ -385,7 +385,7 @@ body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--t
 </div>
 
 <script>
-let apiKey = '', staffName = 'Staff', channel = 'all', tagFilter = 'all', currentId = null, cmpCh = 'sms';
+let apiKey = localStorage.getItem('omnia_key') || '', staffName = localStorage.getItem('omnia_name') || 'Staff', channel = 'all', tagFilter = 'all', currentId = null, cmpCh = 'sms';
 
 const DATA = [
   { id:'1', name:'Jordan Mills', phone:'+1 (719) 555-0142', email:'jordan@gmail.com', tags:['lead','ad'], channels:['sms'], unread:true, lastMsg:'Hey is the 6am class still open tomorrow?', lastTime:'9:41 AM',
@@ -409,19 +409,30 @@ function doLogin() {
   const n = document.getElementById('k-name').value.trim();
   if (!k) { alert('Enter your Klaviyo API key to continue.'); return; }
   apiKey = k; staffName = n || 'Staff';
+  localStorage.setItem('omnia_key', apiKey);
+  localStorage.setItem('omnia_name', staffName);
+  showApp();
+}
+
+function showApp() {
   document.getElementById('login').style.display = 'none';
-  document.getElementById('app').style.display = 'flex';
-  document.getElementById('app').style.flexDirection = 'column';
+  const a = document.getElementById('app');
+  a.style.display = 'flex';
+  a.style.flexDirection = 'column';
   renderList();
 }
 
 function doLogout() {
   apiKey = '';
+  localStorage.removeItem('omnia_key');
+  localStorage.removeItem('omnia_name');
   document.getElementById('app').style.display = 'none';
   document.getElementById('thread').style.display = 'none';
   document.getElementById('login').style.display = 'flex';
   document.getElementById('k-key').value = '';
 }
+
+if (apiKey) { showApp(); }
 
 function setChannel(ch, el) {
   channel = ch;
