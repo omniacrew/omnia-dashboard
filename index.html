@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, interactive-widget=resizes-content">
 <title>Omnia — Communications</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -24,32 +24,83 @@
   --radius-sm: 8px;
   --shadow: 0 1px 3px rgba(0,0,0,0.06), 0 4px 12px rgba(0,0,0,0.04);
 }
+
 @media (prefers-color-scheme: dark) {
   :root {
-    --bg: #111110; --surface: #1C1C1A; --surface-2: #252523;
-    --border: rgba(255,255,255,0.07); --border-md: rgba(255,255,255,0.12);
-    --text: #F0EFE8; --text-2: #A0A09A; --text-3: #606058;
+    --bg: #111110;
+    --surface: #1C1C1A;
+    --surface-2: #252523;
+    --border: rgba(255,255,255,0.07);
+    --border-md: rgba(255,255,255,0.12);
+    --text: #F0EFE8;
+    --text-2: #A0A09A;
+    --text-3: #606058;
     --shadow: 0 1px 3px rgba(0,0,0,0.3), 0 4px 12px rgba(0,0,0,0.2);
   }
 }
+
 * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
 html, body { height: 100%; overflow: hidden; }
 body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); font-size: 15px; }
-#login { height: 100vh; display: flex; flex-direction: column; justify-content: center; padding: 2rem 1.5rem; background: var(--bg); max-width: 420px; margin: 0 auto; }
-.login-mark { width: 52px; height: 52px; border-radius: 14px; background: var(--brand); display: flex; align-items: center; justify-content: center; margin-bottom: 1.5rem; }
+@supports (height: 100dvh) {
+  #app, #thread, #login { height: 100dvh; }
+}
+
+/* ── LOGIN ── */
+#login {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 2rem 1.5rem;
+  background: var(--bg);
+  max-width: 420px;
+  margin: 0 auto;
+}
+.login-mark {
+  width: 52px; height: 52px;
+  border-radius: 14px;
+  background: var(--brand);
+  display: flex; align-items: center; justify-content: center;
+  margin-bottom: 1.5rem;
+}
 .login-mark i { color: #fff; font-size: 26px; }
 .login-h { font-size: 24px; font-weight: 600; color: var(--text); margin-bottom: 4px; }
 .login-sub { font-size: 14px; color: var(--text-2); margin-bottom: 2rem; }
 .field { margin-bottom: 1rem; }
 .field label { display: block; font-size: 12px; font-weight: 500; color: var(--text-2); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 6px; }
-.field input { width: 100%; padding: 11px 14px; background: var(--surface); border: 1px solid var(--border-md); border-radius: var(--radius-sm); font-family: inherit; font-size: 15px; color: var(--text); outline: none; transition: border-color .15s; }
+.field input {
+  width: 100%; padding: 11px 14px;
+  background: var(--surface);
+  border: 1px solid var(--border-md);
+  border-radius: var(--radius-sm);
+  font-family: inherit; font-size: 15px; color: var(--text);
+  outline: none; transition: border-color .15s;
+}
 .field input:focus { border-color: var(--brand); }
 .field input::placeholder { color: var(--text-3); }
-.btn-primary { width: 100%; padding: 13px; background: var(--brand); color: #fff; border: none; border-radius: var(--radius-sm); font-family: inherit; font-size: 15px; font-weight: 500; cursor: pointer; margin-top: .5rem; transition: background .15s, transform .1s; }
+.btn-primary {
+  width: 100%; padding: 13px;
+  background: var(--brand); color: #fff;
+  border: none; border-radius: var(--radius-sm);
+  font-family: inherit; font-size: 15px; font-weight: 500;
+  cursor: pointer; margin-top: .5rem;
+  transition: background .15s, transform .1s;
+}
 .btn-primary:active { background: var(--brand-dark); transform: scale(0.99); }
 .login-note { font-size: 12px; color: var(--text-3); text-align: center; margin-top: 1.25rem; line-height: 1.6; }
+
+/* ── SHELL ── */
 #app { display: none; height: 100vh; flex-direction: column; max-width: 480px; margin: 0 auto; }
-.topbar { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px 10px; background: var(--surface); border-bottom: 1px solid var(--border); flex-shrink: 0; }
+
+/* ── TOP BAR ── */
+.topbar {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 16px 10px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
 .tb-left { display: flex; align-items: center; gap: 10px; }
 .tb-mark { width: 30px; height: 30px; border-radius: 8px; background: var(--brand); display: flex; align-items: center; justify-content: center; }
 .tb-mark i { color: #fff; font-size: 16px; }
@@ -58,24 +109,73 @@ body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--t
 .pulse { display: flex; align-items: center; gap: 5px; font-size: 12px; color: var(--text-3); }
 .pulse-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--brand); animation: pulse 2s infinite; }
 @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
-.ico-btn { width: 34px; height: 34px; border-radius: var(--radius-sm); border: none; background: none; cursor: pointer; display: flex; align-items: center; justify-content: center; color: var(--text-2); font-size: 19px; transition: background .12s; }
+.ico-btn {
+  width: 34px; height: 34px; border-radius: var(--radius-sm);
+  border: none; background: none; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--text-2); font-size: 19px; transition: background .12s;
+}
 .ico-btn:hover { background: var(--surface-2); }
-.ch-tabs { display: flex; background: var(--surface); border-bottom: 1px solid var(--border); flex-shrink: 0; }
-.ch-tab { flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 11px 8px; font-size: 13px; font-weight: 500; color: var(--text-3); cursor: pointer; border-bottom: 2px solid transparent; transition: color .15s; }
+
+/* ── CHANNEL TABS ── */
+.ch-tabs {
+  display: flex; background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.ch-tab {
+  flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px;
+  padding: 11px 8px; font-size: 13px; font-weight: 500; color: var(--text-3);
+  cursor: pointer; border-bottom: 2px solid transparent; transition: color .15s;
+  position: relative;
+}
 .ch-tab.active { color: var(--brand); border-bottom-color: var(--brand); }
 .ch-tab i { font-size: 16px; }
-.unread-badge { min-width: 18px; height: 18px; padding: 0 5px; background: var(--brand); color: #fff; border-radius: 20px; font-size: 11px; font-weight: 600; display: flex; align-items: center; justify-content: center; }
-.filter-row { display: flex; gap: 6px; padding: 10px 12px 6px; overflow-x: auto; flex-shrink: 0; background: var(--bg); scrollbar-width: none; }
+.unread-badge {
+  min-width: 18px; height: 18px; padding: 0 5px;
+  background: var(--brand); color: #fff;
+  border-radius: 20px; font-size: 11px; font-weight: 600;
+  display: flex; align-items: center; justify-content: center;
+}
+
+/* ── FILTER ROW ── */
+.filter-row {
+  display: flex; gap: 6px; padding: 10px 12px 6px;
+  overflow-x: auto; flex-shrink: 0; background: var(--bg);
+  scrollbar-width: none;
+}
 .filter-row::-webkit-scrollbar { display: none; }
-.chip { white-space: nowrap; padding: 5px 12px; border-radius: 20px; border: 1px solid var(--border-md); background: var(--surface); color: var(--text-2); font-size: 12px; font-weight: 500; cursor: pointer; transition: all .12s; }
+.chip {
+  white-space: nowrap; padding: 5px 12px;
+  border-radius: 20px; border: 1px solid var(--border-md);
+  background: var(--surface); color: var(--text-2);
+  font-size: 12px; font-weight: 500; cursor: pointer;
+  transition: all .12s;
+}
 .chip.on { background: var(--brand-light); color: var(--brand-dark); border-color: var(--brand); }
+
+/* ── CONVERSATION LIST ── */
 .list-area { flex: 1; overflow-y: auto; padding: 6px 10px 12px; }
-.sync-row { display: flex; justify-content: space-between; align-items: center; padding: 4px 2px 8px; font-size: 12px; color: var(--text-3); }
+.sync-row {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 4px 2px 8px; font-size: 12px; color: var(--text-3);
+}
 .sync-btn { background: none; border: none; color: var(--brand); font-size: 12px; cursor: pointer; font-family: inherit; display: flex; align-items: center; gap: 4px; }
-.convo { display: flex; align-items: flex-start; gap: 11px; padding: 12px 13px; margin-bottom: 5px; background: var(--surface); border-radius: var(--radius); border: 1px solid var(--border); cursor: pointer; transition: border-color .12s, box-shadow .12s; }
+
+.convo {
+  display: flex; align-items: flex-start; gap: 11px;
+  padding: 12px 13px; margin-bottom: 5px;
+  background: var(--surface); border-radius: var(--radius);
+  border: 1px solid var(--border);
+  cursor: pointer; transition: border-color .12s, box-shadow .12s;
+}
 .convo:hover { border-color: var(--border-md); box-shadow: var(--shadow); }
 .convo.unread { border-left: 3px solid var(--brand); }
-.avatar { width: 40px; height: 40px; border-radius: 50%; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 600; letter-spacing: -.3px; }
+.avatar {
+  width: 40px; height: 40px; border-radius: 50%; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px; font-weight: 600; letter-spacing: -.3px;
+}
 .av-lead { background: #E6F1FB; color: #185FA5; }
 .av-member { background: var(--brand-light); color: var(--brand-dark); }
 .av-appt { background: #FAEEDA; color: #854F0B; }
@@ -87,16 +187,31 @@ body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--t
 .convo-time { font-size: 11px; color: var(--text-3); flex-shrink: 0; margin-left: 8px; }
 .convo-preview { font-size: 13px; color: var(--text-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 5px; }
 .tag-row { display: flex; gap: 4px; flex-wrap: wrap; }
-.tag { font-size: 11px; padding: 2px 8px; border-radius: 20px; font-weight: 500; }
+.tag {
+  font-size: 11px; padding: 2px 8px; border-radius: 20px; font-weight: 500;
+}
 .tag-sms { background: #E1F5EE; color: #0F6E56; }
 .tag-email { background: #E6F1FB; color: #185FA5; }
 .tag-lead { background: #FAEEDA; color: #854F0B; }
 .tag-member { background: #EAF3DE; color: #3B6D11; }
-.tag-appt { background: #FBEAF0; color: #72243E; }
+.tag-appt { background: #FBEAF0; color: #99355620; color: #72243E; }
 .tag-form { background: #F4C0D1; color: #72243E; }
 .tag-ad { background: #EEEDFE; color: #3C3489; }
-#thread { display: none; flex-direction: column; height: 100vh; max-width: 480px; margin: 0 auto; background: var(--bg); }
-.thread-bar { display: flex; align-items: center; gap: 8px; padding: 12px 14px; background: var(--surface); border-bottom: 1px solid var(--border); flex-shrink: 0; }
+
+/* ── THREAD VIEW ── */
+#thread {
+  display: none; flex-direction: column;
+  height: 100vh; height: 100dvh; max-width: 480px; margin: 0 auto;
+  background: var(--bg); position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+  z-index: 10;
+}
+.thread-bar {
+  display: flex; align-items: center; gap: 8px;
+  padding: 12px 14px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
 .back { width: 34px; height: 34px; border: none; background: none; cursor: pointer; color: var(--text-2); font-size: 22px; display: flex; align-items: center; justify-content: center; border-radius: var(--radius-sm); }
 .back:hover { background: var(--surface-2); }
 .thread-info { flex: 1; }
@@ -105,35 +220,77 @@ body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--t
 .ch-badge { display: flex; align-items: center; gap: 3px; font-size: 11px; font-weight: 500; padding: 1px 7px; border-radius: 20px; }
 .ch-sms { background: var(--brand-light); color: var(--brand-dark); }
 .ch-email { background: #E6F1FB; color: #185FA5; }
+
 .msgs { flex: 1; overflow-y: auto; padding: 14px 12px; display: flex; flex-direction: column; gap: 8px; }
 .msg-wrap { display: flex; flex-direction: column; }
 .msg-wrap.out { align-items: flex-end; }
 .msg-wrap.in { align-items: flex-start; }
-.bubble { max-width: 80%; padding: 9px 13px; font-size: 14px; line-height: 1.5; border-radius: 16px; }
-.in .bubble { background: var(--surface); border: 1px solid var(--border); color: var(--text); border-bottom-left-radius: 4px; }
-.out .bubble { background: var(--brand); color: #fff; border-bottom-right-radius: 4px; }
+.bubble {
+  max-width: 80%; padding: 9px 13px;
+  font-size: 14px; line-height: 1.5;
+  border-radius: 16px;
+}
+.in .bubble {
+  background: var(--surface); border: 1px solid var(--border);
+  color: var(--text); border-bottom-left-radius: 4px;
+}
+.out .bubble {
+  background: var(--brand); color: #fff;
+  border-bottom-right-radius: 4px;
+}
 .msg-meta { font-size: 11px; color: var(--text-3); margin-top: 3px; padding: 0 3px; }
-.compose { padding: 10px 12px 14px; background: var(--surface); border-top: 1px solid var(--border); flex-shrink: 0; }
+
+/* ── COMPOSE ── */
+.compose {
+  padding: 10px 12px 14px;
+  padding-bottom: max(14px, env(safe-area-inset-bottom));
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  flex-shrink: 0;
+}
 .compose-top { display: flex; gap: 6px; margin-bottom: 8px; }
-.ch-toggle { display: flex; border: 1px solid var(--border-md); border-radius: var(--radius-sm); overflow: hidden; }
-.ch-opt { padding: 5px 12px; font-size: 12px; font-weight: 500; cursor: pointer; color: var(--text-2); background: none; border: none; font-family: inherit; transition: background .12s, color .12s; }
+.ch-toggle {
+  display: flex; border: 1px solid var(--border-md);
+  border-radius: var(--radius-sm); overflow: hidden;
+}
+.ch-opt {
+  padding: 5px 12px; font-size: 12px; font-weight: 500; cursor: pointer;
+  color: var(--text-2); background: none; border: none; font-family: inherit;
+  transition: background .12s, color .12s;
+}
 .ch-opt.on { background: var(--brand); color: #fff; }
 .compose-row { display: flex; align-items: flex-end; gap: 8px; }
-.compose-input { flex: 1; padding: 9px 13px; background: var(--surface-2); border: 1px solid var(--border-md); border-radius: 20px; font-family: inherit; font-size: 14px; color: var(--text); resize: none; min-height: 38px; max-height: 120px; outline: none; transition: border-color .15s; line-height: 1.4; }
+.compose-input {
+  flex: 1; padding: 9px 13px;
+  background: var(--surface-2); border: 1px solid var(--border-md);
+  border-radius: 20px; font-family: inherit; font-size: 14px; color: var(--text);
+  resize: none; min-height: 38px; max-height: 120px; outline: none;
+  transition: border-color .15s; line-height: 1.4;
+}
 .compose-input:focus { border-color: var(--brand); }
 .compose-input::placeholder { color: var(--text-3); }
-.send-btn { width: 38px; height: 38px; border-radius: 50%; background: var(--brand); border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: background .12s, transform .1s; }
+.send-btn {
+  width: 38px; height: 38px; border-radius: 50%;
+  background: var(--brand); border: none; cursor: pointer;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  transition: background .12s, transform .1s;
+}
 .send-btn:active { background: var(--brand-dark); transform: scale(0.95); }
 .send-btn i { color: #fff; font-size: 17px; }
+
+/* ── EMPTY / MISC ── */
 .empty { text-align: center; padding: 3rem 1.5rem; color: var(--text-3); font-size: 14px; }
-.empty i { font-size: 40px; display: block; margin-bottom: .75rem; }
+.empty i { font-size: 40px; display: block; margin-bottom: .75rem; color: var(--text-3); }
 </style>
 </head>
 <body>
+
+<!-- LOGIN -->
 <div id="login">
   <div class="login-mark"><i class="ti ti-messages"></i></div>
   <div class="login-h">Omnia Communications</div>
   <div class="login-sub">SMS + email inbox powered by Klaviyo</div>
+
   <div class="field">
     <label>Klaviyo private API key</label>
     <input type="password" id="k-key" placeholder="pk_xxxxxxxxxxxxxxxx" />
@@ -145,6 +302,8 @@ body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--t
   <button class="btn-primary" onclick="doLogin()">Connect</button>
   <p class="login-note">Your API key is stored only in this browser session and never leaves your device except to call Klaviyo's API directly.</p>
 </div>
+
+<!-- MAIN APP -->
 <div id="app">
   <div class="topbar">
     <div class="tb-left">
@@ -152,16 +311,27 @@ body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--t
       <span class="tb-title">Omnia</span>
     </div>
     <div class="tb-right">
-      <div class="pulse"><div class="pulse-dot"></div><span>Live</span></div>
+      <div class="pulse"><div class="pulse-dot"></div><span id="sync-label">Live</span></div>
       <button class="ico-btn" onclick="doLogout()" aria-label="Sign out"><i class="ti ti-logout"></i></button>
     </div>
   </div>
+
   <div class="ch-tabs">
-    <div class="ch-tab active" onclick="setChannel('all',this)"><i class="ti ti-layout-list"></i> All <span class="unread-badge" id="badge-all">4</span></div>
-    <div class="ch-tab" onclick="setChannel('sms',this)"><i class="ti ti-message-2"></i> SMS <span class="unread-badge" id="badge-sms">2</span></div>
-    <div class="ch-tab" onclick="setChannel('email',this)"><i class="ti ti-mail"></i> Email <span class="unread-badge" id="badge-email">2</span></div>
+    <div class="ch-tab active" id="tab-all" onclick="setChannel('all', this)">
+      <i class="ti ti-layout-list"></i> All
+      <span class="unread-badge" id="badge-all">4</span>
+    </div>
+    <div class="ch-tab" id="tab-sms" onclick="setChannel('sms', this)">
+      <i class="ti ti-message-2"></i> SMS
+      <span class="unread-badge" id="badge-sms">2</span>
+    </div>
+    <div class="ch-tab" id="tab-email" onclick="setChannel('email', this)">
+      <i class="ti ti-mail"></i> Email
+      <span class="unread-badge" id="badge-email">2</span>
+    </div>
   </div>
-  <div class="filter-row">
+
+  <div class="filter-row" id="filter-row">
     <div class="chip on" onclick="setTag('all',this)">All</div>
     <div class="chip" onclick="setTag('lead',this)">Leads</div>
     <div class="chip" onclick="setTag('member',this)">Members</div>
@@ -170,6 +340,7 @@ body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--t
     <div class="chip" onclick="setTag('ad',this)">Ad Traffic</div>
     <div class="chip" onclick="setTag('unread',this)">Unread</div>
   </div>
+
   <div class="list-area">
     <div class="sync-row">
       <span id="last-sync">Synced just now</span>
@@ -178,19 +349,26 @@ body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--t
     <div id="conv-list"></div>
   </div>
 </div>
+
+<!-- THREAD -->
 <div id="thread">
   <div class="thread-bar">
-    <button class="back" onclick="closeThread()"><i class="ti ti-arrow-left"></i></button>
+    <button class="back" onclick="closeThread()" aria-label="Back"><i class="ti ti-arrow-left"></i></button>
     <div class="thread-info">
       <div class="thread-name" id="t-name"></div>
-      <div class="thread-meta"><span id="t-phone"></span><span id="t-ch-badge"></span></div>
+      <div class="thread-meta">
+        <span id="t-phone"></span>
+        <span id="t-ch-badge"></span>
+      </div>
     </div>
     <div style="display:flex;gap:4px;">
-      <button class="ico-btn" onclick="aiSuggest()" aria-label="AI suggestion"><i class="ti ti-sparkles"></i></button>
-      <button class="ico-btn" aria-label="Profile"><i class="ti ti-user"></i></button>
+      <button class="ico-btn" onclick="aiSuggest()" aria-label="AI reply suggestion"><i class="ti ti-sparkles"></i></button>
+      <button class="ico-btn" aria-label="View profile"><i class="ti ti-user"></i></button>
     </div>
   </div>
+
   <div class="msgs" id="msgs"></div>
+
   <div class="compose">
     <div class="compose-top">
       <div class="ch-toggle">
@@ -199,51 +377,183 @@ body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--t
       </div>
     </div>
     <div class="compose-row">
-      <textarea class="compose-input" id="cmp-input" placeholder="Type a message…" rows="1" oninput="autoH(this)" onkeydown="onKey(event)"></textarea>
-      <button class="send-btn" onclick="doSend()"><i class="ti ti-send"></i></button>
+      <textarea class="compose-input" id="cmp-input" placeholder="Type a message…" rows="1"
+        oninput="autoH(this)" onkeydown="onKey(event)"></textarea>
+      <button class="send-btn" onclick="doSend()" aria-label="Send"><i class="ti ti-send"></i></button>
     </div>
   </div>
 </div>
+
 <script>
-let apiKey='',staffName='Staff',channel='all',tagFilter='all',currentId=null,cmpCh='sms';
-const DATA=[
-  {id:'1',name:'Jordan Mills',phone:'+1 (719) 555-0142',email:'jordan@gmail.com',tags:['lead','ad'],channels:['sms'],unread:true,lastMsg:'Hey is the 6am class still open tomorrow?',lastTime:'9:41 AM',msgs:[{dir:'in',ch:'sms',text:'Hey is the 6am class still open tomorrow?',time:'9:41 AM'},{dir:'in',ch:'sms',text:'Also what does a drop-in cost?',time:'9:42 AM'}]},
-  {id:'2',name:'Priya Okonkwo',phone:'+1 (719) 555-0187',email:'priya.o@gmail.com',tags:['member'],channels:['sms','email'],unread:true,lastMsg:'Thanks! See you Thursday',lastTime:'8:55 AM',msgs:[{dir:'out',ch:'sms',text:'Hi Priya! Reminder: your membership renews on the 25th.',time:'8:30 AM',sender:'Marcus'},{dir:'in',ch:'sms',text:'Thanks! See you Thursday',time:'8:55 AM'}]},
-  {id:'3',name:'Derek Schultz',phone:'+1 (719) 555-0234',email:'derek.s@outlook.com',tags:['appt'],channels:['sms'],unread:false,lastMsg:'Can I reschedule my intro session to Friday?',lastTime:'Yesterday',msgs:[{dir:'in',ch:'sms',text:'Can I reschedule my intro session to Friday?',time:'Yesterday 4:12 PM'},{dir:'out',ch:'sms',text:'Absolutely! Friday at 10am works great.',time:'Yesterday 4:25 PM',sender:'Ashley'}]},
-  {id:'4',name:'Camille Torres',phone:'+1 (719) 555-0301',email:'camille.t@icloud.com',tags:['lead','ad'],channels:['sms','email'],unread:false,lastMsg:'That would be great actually',lastTime:'Yesterday',msgs:[{dir:'in',ch:'sms',text:'Do you guys offer military discounts?',time:'Yesterday 2:10 PM'},{dir:'out',ch:'sms',text:'Yes! 15% off for active duty and veterans. Want a free tour?',time:'Yesterday 2:18 PM',sender:'Marcus'},{dir:'in',ch:'sms',text:'That would be great actually',time:'Yesterday 2:22 PM'}]},
-  {id:'5',name:'Website Inquiry - Ryan Cole',phone:'',email:'ryan.cole88@gmail.com',tags:['lead','form'],channels:['email'],unread:true,lastMsg:'Interested in personal training packages',lastTime:'10:02 AM',msgs:[{dir:'in',ch:'email',text:'Hi, I found your gym through your website. I am interested in personal training packages. What are the options and pricing? - Ryan',time:'10:02 AM'}]},
-  {id:'6',name:'Website Inquiry - Sarah Kim',phone:'',email:'sarahkim@gmail.com',tags:['lead','form'],channels:['email'],unread:true,lastMsg:'Looking for group class schedule',lastTime:'Yesterday',msgs:[{dir:'in',ch:'email',text:'Hello! I submitted a contact form about your group classes. Can you send me the current schedule and any intro offers? Thanks, Sarah',time:'Yesterday 11:30 AM'}]},
+let apiKey = '', staffName = 'Staff', channel = 'all', tagFilter = 'all', currentId = null, cmpCh = 'sms';
+
+const DATA = [
+  { id:'1', name:'Jordan Mills', phone:'+1 (719) 555-0142', email:'jordan@gmail.com', tags:['lead','ad'], channels:['sms'], unread:true, lastMsg:'Hey is the 6am class still open tomorrow?', lastTime:'9:41 AM',
+    msgs:[{dir:'in',ch:'sms',text:'Hey is the 6am class still open tomorrow?',time:'9:41 AM'},{dir:'in',ch:'sms',text:'Also what does a drop-in cost?',time:'9:42 AM'}]},
+  { id:'2', name:'Priya Okonkwo', phone:'+1 (719) 555-0187', email:'priya.o@gmail.com', tags:['member'], channels:['sms','email'], unread:true, lastMsg:'Thanks! See you Thursday 🙌', lastTime:'8:55 AM',
+    msgs:[{dir:'out',ch:'sms',text:'Hi Priya! Reminder: your membership renews on the 25th. Reply HELP anytime.',time:'8:30 AM',sender:'Marcus'},{dir:'in',ch:'sms',text:'Thanks! See you Thursday 🙌',time:'8:55 AM'}]},
+  { id:'3', name:'Derek Schultz', phone:'+1 (719) 555-0234', email:'derek.s@outlook.com', tags:['appt'], channels:['sms'], unread:false, lastMsg:'Can I reschedule my intro session to Friday?', lastTime:'Yesterday',
+    msgs:[{dir:'in',ch:'sms',text:'Can I reschedule my intro session to Friday?',time:'Yesterday 4:12 PM'},{dir:'out',ch:'sms',text:"Absolutely! Friday at 10am works great. You're all set, Derek.",time:'Yesterday 4:25 PM',sender:'Ashley'}]},
+  { id:'4', name:'Camille Torres', phone:'+1 (719) 555-0301', email:'camille.t@icloud.com', tags:['lead','ad'], channels:['sms','email'], unread:false, lastMsg:'That would be great actually', lastTime:'Yesterday',
+    msgs:[{dir:'in',ch:'sms',text:'Do you guys offer military discounts?',time:'Yesterday 2:10 PM'},{dir:'out',ch:'sms',text:'Yes! We offer 15% off for active duty and veterans. Want to come in for a free tour?',time:'Yesterday 2:18 PM',sender:'Marcus'},{dir:'in',ch:'sms',text:'That would be great actually',time:'Yesterday 2:22 PM'}]},
+  { id:'5', name:'Website Inquiry — Ryan Cole', phone:'', email:'ryan.cole88@gmail.com', tags:['lead','form'], channels:['email'], unread:true, lastMsg:'Interested in personal training packages', lastTime:'10:02 AM',
+    msgs:[{dir:'in',ch:'email',text:'Hi, I found your gym through your website. I\'m interested in personal training packages. What are the options and pricing? — Ryan',time:'10:02 AM'}]},
+  { id:'6', name:'Website Inquiry — Sarah Kim', phone:'', email:'sarahkim@gmail.com', tags:['lead','form'], channels:['email'], unread:true, lastMsg:'Looking for group class schedule', lastTime:'Yesterday',
+    msgs:[{dir:'in',ch:'email',text:'Hello! I submitted a contact form yesterday about your group classes. Can you send me the current schedule and any intro offers? Thanks, Sarah',time:'Yesterday 11:30 AM'}]},
 ];
-let convos=JSON.parse(JSON.stringify(DATA));
-function doLogin(){const k=document.getElementById('k-key').value.trim(),n=document.getElementById('k-name').value.trim();if(!k){alert('Enter your Klaviyo API key.');return;}apiKey=k;staffName=n||'Staff';document.getElementById('login').style.display='none';const a=document.getElementById('app');a.style.display='flex';a.style.flexDirection='column';renderList();}
-function doLogout(){apiKey='';document.getElementById('app').style.display='none';document.getElementById('thread').style.display='none';document.getElementById('login').style.display='flex';document.getElementById('k-key').value='';}
-function setChannel(ch,el){channel=ch;document.querySelectorAll('.ch-tab').forEach(t=>t.classList.remove('active'));el.classList.add('active');renderList();}
-function setTag(t,el){tagFilter=t;document.querySelectorAll('.chip').forEach(c=>c.classList.remove('on'));el.classList.add('on');renderList();}
-function avClass(c){if(c.tags.includes('member'))return'av-member';if(c.tags.includes('form'))return'av-form';if(c.tags.includes('lead'))return'av-lead';if(c.tags.includes('appt'))return'av-appt';return'av-default';}
-function initials(n){const p=n.replace('Website Inquiry - ','').split(' ');return(p[0][0]+(p[1]?p[1][0]:'')).toUpperCase();}
-function renderList(){
-  let list=convos;
-  if(channel==='sms')list=list.filter(c=>c.channels.includes('sms'));
-  if(channel==='email')list=list.filter(c=>c.channels.includes('email'));
-  if(tagFilter==='unread')list=list.filter(c=>c.unread);
-  else if(tagFilter!=='all')list=list.filter(c=>c.tags.includes(tagFilter));
-  ['all','sms','email'].forEach(ch=>{const b=document.getElementById('badge-'+ch),count=ch==='all'?convos.filter(c=>c.unread).length:convos.filter(c=>c.unread&&c.channels.includes(ch)).length;b.textContent=count;b.style.display=count?'flex':'none';});
-  const el=document.getElementById('conv-list');
-  if(!list.length){el.innerHTML='<div class="empty"><i class="ti ti-inbox"></i>No conversations match this filter.</div>';return;}
-  el.innerHTML=list.map(c=>{
-    const tagHTML=[...c.channels.map(ch=>`<span class="tag tag-${ch}">${ch==='sms'?'SMS':'Email'}</span>`),...c.tags.slice(0,2).map(t=>`<span class="tag tag-${t}">${t==='lead'?'Lead':t==='member'?'Member':t==='appt'?'Appt':t==='form'?'Form':'Ad'}</span>`)].join('');
-    return`<div class="convo${c.unread?' unread':''}" onclick="openThread('${c.id}')"><div class="avatar ${avClass(c)}">${initials(c.name)}</div><div class="convo-body"><div class="convo-top"><span class="convo-name">${c.name}</span><span class="convo-time">${c.lastTime}</span></div><div class="convo-preview">${c.lastMsg}</div><div class="tag-row">${tagHTML}</div></div></div>`;
+
+let convos = JSON.parse(JSON.stringify(DATA));
+
+function doLogin() {
+  const k = document.getElementById('k-key').value.trim();
+  const n = document.getElementById('k-name').value.trim();
+  if (!k) { alert('Enter your Klaviyo API key to continue.'); return; }
+  apiKey = k; staffName = n || 'Staff';
+  document.getElementById('login').style.display = 'none';
+  document.getElementById('app').style.display = 'flex';
+  document.getElementById('app').style.flexDirection = 'column';
+  renderList();
+}
+
+function doLogout() {
+  apiKey = '';
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('thread').style.display = 'none';
+  document.getElementById('login').style.display = 'flex';
+  document.getElementById('k-key').value = '';
+}
+
+function setChannel(ch, el) {
+  channel = ch;
+  document.querySelectorAll('.ch-tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  renderList();
+}
+
+function setTag(t, el) {
+  tagFilter = t;
+  document.querySelectorAll('.chip').forEach(c => c.classList.remove('on'));
+  el.classList.add('on');
+  renderList();
+}
+
+function avClass(c) {
+  if (c.tags.includes('member')) return 'av-member';
+  if (c.tags.includes('form')) return 'av-form';
+  if (c.tags.includes('lead')) return 'av-lead';
+  if (c.tags.includes('appt')) return 'av-appt';
+  return 'av-default';
+}
+
+function initials(name) {
+  const parts = name.replace('Website Inquiry — ','').split(' ');
+  return (parts[0][0]+(parts[1]?parts[1][0]:'')).toUpperCase();
+}
+
+function renderList() {
+  let list = convos;
+  if (channel === 'sms') list = list.filter(c => c.channels.includes('sms'));
+  if (channel === 'email') list = list.filter(c => c.channels.includes('email'));
+  if (tagFilter === 'unread') list = list.filter(c => c.unread);
+  else if (tagFilter !== 'all') list = list.filter(c => c.tags.includes(tagFilter));
+
+  const unreadAll = convos.filter(c=>c.unread).length;
+  const unreadSms = convos.filter(c=>c.unread&&c.channels.includes('sms')).length;
+  const unreadEmail = convos.filter(c=>c.unread&&c.channels.includes('email')).length;
+  ['all','sms','email'].forEach(ch => {
+    const b = document.getElementById('badge-'+ch);
+    const count = ch==='all'?unreadAll:ch==='sms'?unreadSms:unreadEmail;
+    b.textContent = count; b.style.display = count?'flex':'none';
+  });
+
+  const el = document.getElementById('conv-list');
+  if (!list.length) { el.innerHTML = '<div class="empty"><i class="ti ti-inbox"></i>No conversations match this filter.</div>'; return; }
+
+  el.innerHTML = list.map(c => {
+    const tagHTML = [
+      ...c.channels.map(ch=>`<span class="tag tag-${ch}">${ch==='sms'?'SMS':'Email'}</span>`),
+      ...c.tags.filter(t=>!['lead','member'].includes(t)||true).slice(0,2).map(t=>`<span class="tag tag-${t}">${t==='lead'?'Lead':t==='member'?'Member':t==='appt'?'Appt':t==='form'?'Form':'Ad'}</span>`)
+    ].join('');
+    return `<div class="convo${c.unread?' unread':''}" onclick="openThread('${c.id}')">
+      <div class="avatar ${avClass(c)}">${initials(c.name)}</div>
+      <div class="convo-body">
+        <div class="convo-top"><span class="convo-name">${c.name}</span><span class="convo-time">${c.lastTime}</span></div>
+        <div class="convo-preview">${c.lastMsg}</div>
+        <div class="tag-row">${tagHTML}</div>
+      </div>
+    </div>`;
   }).join('');
 }
-function openThread(id){currentId=id;const c=convos.find(x=>x.id===id);if(!c)return;c.unread=false;document.getElementById('t-name').textContent=c.name.replace('Website Inquiry - ','');document.getElementById('t-phone').textContent=c.phone||c.email;document.getElementById('t-ch-badge').innerHTML=c.channels.map(ch=>`<span class="ch-badge ch-${ch}">${ch==='sms'?'SMS':'Email'}</span>`).join('');const hasSms=c.channels.includes('sms'),hasEmail=c.channels.includes('email');document.getElementById('cmp-sms').style.display=hasSms?'':'none';document.getElementById('cmp-email').style.display=hasEmail?'':'none';setCmpCh(hasSms?'sms':'email');renderMsgs(c);document.getElementById('app').style.display='none';const tv=document.getElementById('thread');tv.style.display='flex';tv.style.flexDirection='column';}
-function closeThread(){document.getElementById('thread').style.display='none';const a=document.getElementById('app');a.style.display='flex';a.style.flexDirection='column';renderList();}
-function renderMsgs(c){const area=document.getElementById('msgs');area.innerHTML=c.msgs.map(m=>`<div class="msg-wrap ${m.dir==='out'?'out':'in'}"><div class="bubble">${m.text}</div><div class="msg-meta">${m.time}${m.sender?' · '+m.sender:''} · ${m.ch==='sms'?'SMS':'Email'}</div></div>`).join('');setTimeout(()=>{area.scrollTop=area.scrollHeight;},50);}
-function setCmpCh(ch){cmpCh=ch;document.getElementById('cmp-sms').classList.toggle('on',ch==='sms');document.getElementById('cmp-email').classList.toggle('on',ch==='email');document.getElementById('cmp-input').placeholder=ch==='sms'?'Type an SMS...':'Type an email reply...';}
-function doSend(){const input=document.getElementById('cmp-input'),text=input.value.trim();if(!text||!currentId)return;const c=convos.find(x=>x.id===currentId),now=new Date(),time=now.toLocaleTimeString([],{hour:'numeric',minute:'2-digit'});c.msgs.push({dir:'out',ch:cmpCh,text,time,sender:staffName});c.lastMsg=text;c.lastTime=time;input.value='';input.style.height='auto';renderMsgs(c);}
-function onKey(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();doSend();}}
-function autoH(el){el.style.height='auto';el.style.height=Math.min(el.scrollHeight,120)+'px';}
-function doRefresh(){document.getElementById('last-sync').textContent='Synced just now';}
-function aiSuggest(){const c=convos.find(x=>x.id===currentId);if(!c)return;const last=c.msgs.filter(m=>m.dir==='in').pop();alert('AI reply suggestion: Connect to Claude API to generate smart replies based on the conversation context.');}
+
+function openThread(id) {
+  currentId = id;
+  const c = convos.find(x=>x.id===id);
+  if (!c) return;
+  c.unread = false;
+  document.getElementById('t-name').textContent = c.name.replace('Website Inquiry — ','');
+  document.getElementById('t-phone').textContent = c.phone || c.email;
+  const hasSms = c.channels.includes('sms'), hasEmail = c.channels.includes('email');
+  document.getElementById('t-ch-badge').innerHTML = c.channels.map(ch=>`<span class="ch-badge ch-${ch}">${ch==='sms'?'SMS':'Email'}</span>`).join('');
+  document.getElementById('cmp-sms').style.display = hasSms ? '' : 'none';
+  document.getElementById('cmp-email').style.display = hasEmail ? '' : 'none';
+  setCmpCh(hasSms ? 'sms' : 'email');
+  renderMsgs(c);
+  document.getElementById('app').style.display = 'none';
+  const tv = document.getElementById('thread');
+  tv.style.display = 'flex'; tv.style.flexDirection = 'column';
+}
+
+function closeThread() {
+  document.getElementById('thread').style.display = 'none';
+  document.getElementById('app').style.display = 'flex';
+  document.getElementById('app').style.flexDirection = 'column';
+  renderList();
+}
+
+function renderMsgs(c) {
+  const area = document.getElementById('msgs');
+  area.innerHTML = c.msgs.map(m=>`
+    <div class="msg-wrap ${m.dir==='out'?'out':'in'}">
+      <div class="bubble">${m.text}</div>
+      <div class="msg-meta">${m.time}${m.sender?' · '+m.sender:''} · ${m.ch==='sms'?'SMS':'Email'}</div>
+    </div>`).join('');
+  setTimeout(()=>{ area.scrollTop = area.scrollHeight; },50);
+}
+
+function setCmpCh(ch) {
+  cmpCh = ch;
+  document.getElementById('cmp-sms').classList.toggle('on', ch==='sms');
+  document.getElementById('cmp-email').classList.toggle('on', ch==='email');
+  document.getElementById('cmp-input').placeholder = ch==='sms' ? 'Type an SMS…' : 'Type an email reply…';
+}
+
+function doSend() {
+  const input = document.getElementById('cmp-input');
+  const text = input.value.trim();
+  if (!text || !currentId) return;
+  const c = convos.find(x=>x.id===currentId);
+  const now = new Date();
+  const time = now.toLocaleTimeString([],{hour:'numeric',minute:'2-digit'});
+  c.msgs.push({dir:'out',ch:cmpCh,text,time,sender:staffName});
+  c.lastMsg = text; c.lastTime = time;
+  input.value = ''; input.style.height = 'auto';
+  renderMsgs(c);
+}
+
+function onKey(e) { if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();doSend();} }
+function autoH(el) { el.style.height='auto'; el.style.height=Math.min(el.scrollHeight,120)+'px'; }
+
+function doRefresh() {
+  document.getElementById('last-sync').textContent = 'Synced just now';
+}
+
+function aiSuggest() {
+  const c = convos.find(x=>x.id===currentId);
+  if (!c) return;
+  const last = c.msgs.filter(m=>m.dir==='in').pop();
+  const prompt = last ? `Draft a short, friendly SMS reply for Omnia Fit to: "${last.text}"` : 'What are some good SMS reply templates for a fitness studio?';
+  if (typeof sendPrompt === 'function') sendPrompt(prompt);
+}
 </script>
 </body>
 </html>
