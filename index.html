@@ -182,10 +182,11 @@ body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--t
   display: flex; align-items: center; justify-content: center;
   font-size: 14px; font-weight: 600; letter-spacing: -.3px;
 }
-.av-lead { background: #E6F1FB; color: #185FA5; }
+.av-membership { background: #FAEEDA; color: #854F0B; }
+.av-pt { background: #E6F1FB; color: #185FA5; }
+.av-nutrition { background: #EAF3DE; color: #3B6D11; }
+.av-general { background: #EEEDFE; color: #3C3489; }
 .av-member { background: var(--brand-light); color: var(--brand-dark); }
-.av-appt { background: #FAEEDA; color: #854F0B; }
-.av-form { background: #F4C0D1; color: #72243E; }
 .av-default { background: #F1EFE8; color: #5F5E5A; }
 .convo-body { flex: 1; min-width: 0; }
 .convo-top { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 2px; }
@@ -198,11 +199,11 @@ body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--t
 }
 .tag-sms { background: #E1F5EE; color: #0F6E56; }
 .tag-email { background: #E6F1FB; color: #185FA5; }
-.tag-lead { background: #FAEEDA; color: #854F0B; }
-.tag-member { background: #EAF3DE; color: #3B6D11; }
-.tag-appt { background: #FBEAF0; color: #99355620; color: #72243E; }
-.tag-form { background: #F4C0D1; color: #72243E; }
-.tag-ad { background: #EEEDFE; color: #3C3489; }
+.tag-membership { background: #FAEEDA; color: #854F0B; }
+.tag-pt { background: #E6F1FB; color: #185FA5; }
+.tag-nutrition { background: #EAF3DE; color: #3B6D11; }
+.tag-general { background: #EEEDFE; color: #3C3489; }
+.tag-member { background: var(--brand-light); color: var(--brand-dark); }
 
 /* ── THREAD VIEW ── */
 #thread {
@@ -339,11 +340,11 @@ body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--t
 
   <div class="filter-row" id="filter-row">
     <div class="chip on" onclick="setTag('all',this)">All</div>
-    <div class="chip" onclick="setTag('lead',this)">Leads</div>
-    <div class="chip" onclick="setTag('member',this)">Members</div>
-    <div class="chip" onclick="setTag('appt',this)">Appointments</div>
-    <div class="chip" onclick="setTag('form',this)">Contact Form</div>
-    <div class="chip" onclick="setTag('ad',this)">Ad Traffic</div>
+    <div class="chip" onclick="setTag('membership',this)">Membership</div>
+    <div class="chip" onclick="setTag('pt',this)">Personal Training</div>
+    <div class="chip" onclick="setTag('nutrition',this)">Nutrition</div>
+    <div class="chip" onclick="setTag('general',this)">General Questions</div>
+    <div class="chip" onclick="setTag('member',this)">Current Members</div>
     <div class="chip" onclick="setTag('unread',this)">Unread</div>
   </div>
 
@@ -394,18 +395,18 @@ body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--t
 let apiKey = localStorage.getItem('omnia_key') || '', staffName = localStorage.getItem('omnia_name') || 'Staff', channel = 'all', tagFilter = 'all', currentId = null, cmpCh = 'sms';
 
 const DATA = [
-  { id:'1', name:'Jordan Mills', phone:'+1 (719) 555-0142', email:'jordan@gmail.com', tags:['lead','ad'], channels:['sms'], unread:true, lastMsg:'Hey is the 6am class still open tomorrow?', lastTime:'9:41 AM',
+  { id:'1', name:'Jordan Mills', phone:'+1 (719) 555-0142', email:'jordan@gmail.com', tags:['membership'], channels:['sms'], unread:true, lastMsg:'Hey is the 6am class still open tomorrow?', lastTime:'9:41 AM',
     msgs:[{dir:'in',ch:'sms',text:'Hey is the 6am class still open tomorrow?',time:'9:41 AM'},{dir:'in',ch:'sms',text:'Also what does a drop-in cost?',time:'9:42 AM'}]},
   { id:'2', name:'Priya Okonkwo', phone:'+1 (719) 555-0187', email:'priya.o@gmail.com', tags:['member'], channels:['sms','email'], unread:true, lastMsg:'Thanks! See you Thursday 🙌', lastTime:'8:55 AM',
     msgs:[{dir:'out',ch:'sms',text:'Hi Priya! Reminder: your membership renews on the 25th. Reply HELP anytime.',time:'8:30 AM',sender:'Marcus'},{dir:'in',ch:'sms',text:'Thanks! See you Thursday 🙌',time:'8:55 AM'}]},
-  { id:'3', name:'Derek Schultz', phone:'+1 (719) 555-0234', email:'derek.s@outlook.com', tags:['appt'], channels:['sms'], unread:false, lastMsg:'Can I reschedule my intro session to Friday?', lastTime:'Yesterday',
+  { id:'3', name:'Derek Schultz', phone:'+1 (719) 555-0234', email:'derek.s@outlook.com', tags:['pt'], channels:['sms'], unread:false, lastMsg:'Can I reschedule my intro session to Friday?', lastTime:'Yesterday',
     msgs:[{dir:'in',ch:'sms',text:'Can I reschedule my intro session to Friday?',time:'Yesterday 4:12 PM'},{dir:'out',ch:'sms',text:"Absolutely! Friday at 10am works great. You're all set, Derek.",time:'Yesterday 4:25 PM',sender:'Ashley'}]},
-  { id:'4', name:'Camille Torres', phone:'+1 (719) 555-0301', email:'camille.t@icloud.com', tags:['lead','ad'], channels:['sms','email'], unread:false, lastMsg:'That would be great actually', lastTime:'Yesterday',
+  { id:'4', name:'Camille Torres', phone:'+1 (719) 555-0301', email:'camille.t@icloud.com', tags:['general'], channels:['sms','email'], unread:false, lastMsg:'That would be great actually', lastTime:'Yesterday',
     msgs:[{dir:'in',ch:'sms',text:'Do you guys offer military discounts?',time:'Yesterday 2:10 PM'},{dir:'out',ch:'sms',text:'Yes! We offer 15% off for active duty and veterans. Want to come in for a free tour?',time:'Yesterday 2:18 PM',sender:'Marcus'},{dir:'in',ch:'sms',text:'That would be great actually',time:'Yesterday 2:22 PM'}]},
-  { id:'5', name:'Website Inquiry — Ryan Cole', phone:'', email:'ryan.cole88@gmail.com', tags:['lead','form'], channels:['email'], unread:true, lastMsg:'Interested in personal training packages', lastTime:'10:02 AM',
-    msgs:[{dir:'in',ch:'email',text:'Hi, I found your gym through your website. I\'m interested in personal training packages. What are the options and pricing? — Ryan',time:'10:02 AM'}]},
-  { id:'6', name:'Website Inquiry — Sarah Kim', phone:'', email:'sarahkim@gmail.com', tags:['lead','form'], channels:['email'], unread:true, lastMsg:'Looking for group class schedule', lastTime:'Yesterday',
-    msgs:[{dir:'in',ch:'email',text:'Hello! I submitted a contact form yesterday about your group classes. Can you send me the current schedule and any intro offers? Thanks, Sarah',time:'Yesterday 11:30 AM'}]},
+  { id:'5', name:'Ryan Cole', phone:'+1 (303) 555-0178', email:'ryan.cole88@gmail.com', tags:['pt'], channels:['email'], unread:true, lastMsg:'Interested in personal training packages', lastTime:'10:02 AM',
+    msgs:[{dir:'in',ch:'email',text:'Hi, I found your gym through your website. I am interested in personal training packages. What are the options and pricing? — Ryan',time:'10:02 AM'}]},
+  { id:'6', name:'Sarah Kim', phone:'+1 (303) 555-0192', email:'sarahkim@gmail.com', tags:['nutrition'], channels:['email'], unread:true, lastMsg:'Looking for nutrition coaching info', lastTime:'Yesterday',
+    msgs:[{dir:'in',ch:'email',text:'Hello! I submitted a contact form about nutrition coaching. Can you tell me more about the program and pricing? Thanks, Sarah',time:'Yesterday 11:30 AM'}]},
 ];
 
 let convos = JSON.parse(JSON.stringify(DATA));
@@ -456,14 +457,15 @@ function setTag(t, el) {
 
 function avClass(c) {
   if (c.tags.includes('member')) return 'av-member';
-  if (c.tags.includes('form')) return 'av-form';
-  if (c.tags.includes('lead')) return 'av-lead';
-  if (c.tags.includes('appt')) return 'av-appt';
+  if (c.tags.includes('membership')) return 'av-membership';
+  if (c.tags.includes('pt')) return 'av-pt';
+  if (c.tags.includes('nutrition')) return 'av-nutrition';
+  if (c.tags.includes('general')) return 'av-general';
   return 'av-default';
 }
 
 function initials(name) {
-  const parts = name.replace('Website Inquiry — ','').split(' ');
+  const parts = name.split(' ');
   return (parts[0][0]+(parts[1]?parts[1][0]:'')).toUpperCase();
 }
 
@@ -487,9 +489,10 @@ function renderList() {
   if (!list.length) { el.innerHTML = '<div class="empty"><i class="ti ti-inbox"></i>No conversations match this filter.</div>'; return; }
 
   el.innerHTML = list.map(c => {
+    const tagLabels = { membership: 'Membership', pt: 'Personal Training', nutrition: 'Nutrition', general: 'General', member: 'Member' };
     const tagHTML = [
       ...c.channels.map(ch=>`<span class="tag tag-${ch}">${ch==='sms'?'SMS':'Email'}</span>`),
-      ...c.tags.filter(t=>!['lead','member'].includes(t)||true).slice(0,2).map(t=>`<span class="tag tag-${t}">${t==='lead'?'Lead':t==='member'?'Member':t==='appt'?'Appt':t==='form'?'Form':'Ad'}</span>`)
+      ...c.tags.slice(0,2).map(t=>`<span class="tag tag-${t}">${tagLabels[t]||t}</span>`)
     ].join('');
     return `<div class="convo${c.unread?' unread':''}" onclick="openThread('${c.id}')">
       <div class="avatar ${avClass(c)}">${initials(c.name)}</div>
@@ -507,7 +510,7 @@ function openThread(id) {
   const c = convos.find(x=>x.id===id);
   if (!c) return;
   c.unread = false;
-  document.getElementById('t-name').textContent = c.name.replace('Website Inquiry — ','');
+  document.getElementById('t-name').textContent = c.name;
   document.getElementById('t-phone').textContent = c.phone || c.email;
   const hasSms = c.channels.includes('sms'), hasEmail = c.channels.includes('email');
   document.getElementById('t-ch-badge').innerHTML = c.channels.map(ch=>`<span class="ch-badge ch-${ch}">${ch==='sms'?'SMS':'Email'}</span>`).join('');
@@ -581,52 +584,3 @@ if ('serviceWorker' in navigator) {
 </script>
 </body>
 </html>
-
-{
-  "name": "Omnia Communications",
-  "short_name": "Omnia",
-  "description": "SMS + email inbox for Omnia Fit",
-  "start_url": "/",
-  "display": "standalone",
-  "orientation": "portrait",
-  "background_color": "#1D9E75",
-  "theme_color": "#1D9E75",
-  "icons": [
-    {
-      "src": "/apple-touch-icon.png",
-      "sizes": "180x180",
-      "type": "image/png"
-    },
-    {
-      "src": "/icon-192.png",
-      "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "any maskable"
-    },
-    {
-      "src": "/icon-512.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "any maskable"
-    }
-  ]
-}
-
-const CACHE = 'omnia-v1';
-const ASSETS = ['/', '/index.html', '/manifest.json', '/icon-192.png', '/icon-512.png', '/apple-touch-icon.png'];
-
-self.addEventListener('install', e => {
-  e.waitUntil(caches.open(CACHE).then(c => c.addAll(ASSETS)));
-  self.skipWaiting();
-});
-
-self.addEventListener('activate', e => {
-  e.waitUntil(caches.keys().then(keys => Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k)))));
-  self.clients.claim();
-});
-
-self.addEventListener('fetch', e => {
-  e.respondWith(
-    fetch(e.request).catch(() => caches.match(e.request))
-  );
-});
