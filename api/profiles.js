@@ -1,5 +1,5 @@
 // GET /api/profiles
-// Returns profiles from the Book Intro list joined in the last 30 days
+// Returns profiles from the Book Intro list created or updated in the last 30 days
 import { klaviyoFetch, interestToTag } from './_klaviyo.js';
 
 export default async function handler(req, res) {
@@ -10,10 +10,12 @@ export default async function handler(req, res) {
     return res.status(503).json({ ok: false, error: 'Server is missing Klaviyo configuration.' });
   }
 
+  // Calculate "last 30 days" cutoff
   const thirtyDaysAgo = new Date();
   thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
   const cutoff = thirtyDaysAgo.toISOString();
 
+  // Fetch profiles in the Book Intro list joined in the last 30 days.
   // Note: on /api/lists/{id}/profiles, 'updated' is not filterable.
   // Allowed filter fields: _kx, email, joined_group_at, phone_number, push_token.
   const filter = `greater-than(joined_group_at,${cutoff})`;
@@ -28,7 +30,16 @@ export default async function handler(req, res) {
     });
   }
 
-  const profiles = (data?.data || []).map(p => {
+  // Transform Klaviyo profile data into our dashboard format.
+  // Filter out "soft inquiries" â newsletter signups without omnia_interest.
+  // They share the Book Intro list but aren't actual leads.
+  const profiles = (data?.data || [])
+    .filter(p => {
+      const props = p.attributes?.properties || {};
+      const interest = (props.omnia_interest || '').trim();
+      return interest !== '';
+    })
+    .map(p => {
     const attrs = p.attributes || {};
     const props = attrs.properties || {};
     const interest = props.omnia_interest || '';
@@ -37,9 +48,12 @@ export default async function handler(req, res) {
     const lastName = attrs.last_name || '';
     const name = `${firstName} ${lastName}`.trim() || attrs.email || 'Unknown';
     const created = attrs.created || attrs.updated;
+
+    // Build initial "message" from form submission
     const formMsg = notes
       ? `Interested in: ${interest}\n\n"${notes}"`
       : `Interested in: ${interest}`;
+
     return {
       id: p.id,
       name,
@@ -51,7 +65,12 @@ export default async function handler(req, res) {
       lastMsg: interest || 'New lead',
       lastTime: formatTime(created),
       created,
-      msgs: [{ dir: 'in', ch: 'form', text: formMsg, time: formatTime(created) }],
+      msgs: [{
+        dir: 'in',
+        ch: 'form',
+        text: formMsg,
+        time: formatTime(created),
+      }],
     };
   });
 
