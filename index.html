@@ -204,6 +204,7 @@ body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--t
 .tag-nutrition { background: #EAF3DE; color: #3B6D11; }
 .tag-general { background: #EEEDFE; color: #3C3489; }
 .tag-member { background: var(--brand-light); color: var(--brand-dark); }
+.tag-form { background: #F4C0D1; color: #72243E; }
 
 /* ── THREAD VIEW ── */
 #thread {
@@ -369,8 +370,10 @@ body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--t
       </div>
     </div>
     <div style="display:flex;gap:4px;">
+      <button class="ico-btn" id="quick-call" onclick="quickAction('call')" aria-label="Call"><i class="ti ti-phone"></i></button>
+      <button class="ico-btn" id="quick-sms" onclick="quickAction('sms')" aria-label="Text"><i class="ti ti-message-2"></i></button>
+      <button class="ico-btn" id="quick-email" onclick="quickAction('email')" aria-label="Email"><i class="ti ti-mail"></i></button>
       <button class="ico-btn" onclick="aiSuggest()" aria-label="AI reply suggestion"><i class="ti ti-sparkles"></i></button>
-      <button class="ico-btn" aria-label="View profile"><i class="ti ti-user"></i></button>
     </div>
   </div>
 
@@ -384,7 +387,7 @@ body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--t
       </div>
     </div>
     <div class="compose-row">
-      <textarea class="compose-input" id="cmp-input" placeholder="Type a message…" rows="1"
+      <textarea class="compose-input" id="cmp-input" placeholder="Type a text… (opens Messages to send)" rows="1"
         oninput="autoH(this)" onkeydown="onKey(event)"></textarea>
       <button class="send-btn" onclick="doSend()" aria-label="Send"><i class="ti ti-send"></i></button>
     </div>
@@ -392,7 +395,7 @@ body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--t
 </div>
 
 <script>
-let apiKey = localStorage.getItem('omnia_key') || '', staffName = localStorage.getItem('omnia_name') || 'Staff', channel = 'all', tagFilter = 'all', currentId = null, cmpCh = 'sms';
+let staffName = localStorage.getItem('omnia_name') || '', channel = 'all', tagFilter = 'all', currentId = null, cmpCh = 'sms';
 
 const DATA = [
   { id:'1', name:'Jordan Mills', phone:'+1 (719) 555-0142', email:'jordan@gmail.com', tags:['membership'], channels:['sms'], unread:true, lastMsg:'Hey is the 6am class still open tomorrow?', lastTime:'9:41 AM',
@@ -412,11 +415,9 @@ const DATA = [
 let convos = JSON.parse(JSON.stringify(DATA));
 
 function doLogin() {
-  const k = document.getElementById('k-key').value.trim();
   const n = document.getElementById('k-name').value.trim();
-  if (!k) { alert('Enter your Klaviyo API key to continue.'); return; }
-  apiKey = k; staffName = n || 'Staff';
-  localStorage.setItem('omnia_key', apiKey);
+  if (!n) { alert('Please enter your name.'); return; }
+  staffName = n;
   localStorage.setItem('omnia_name', staffName);
   showApp();
 }
@@ -427,19 +428,38 @@ function showApp() {
   a.style.display = 'flex';
   a.style.flexDirection = 'column';
   renderList();
+  loadProfiles();
+}
+
+async function loadProfiles() {
+  const syncLabel = document.getElementById('last-sync');
+  if (syncLabel) syncLabel.textContent = 'Syncing with Klaviyo…';
+  try {
+    const res = await fetch('/api/profiles');
+    const json = await res.json();
+    if (json.ok && json.profiles) {
+      convos = json.profiles;
+      renderList();
+      if (syncLabel) syncLabel.textContent = 'Synced just now';
+    } else {
+      console.error('Klaviyo fetch error:', json.error);
+      if (syncLabel) syncLabel.textContent = 'Sync error — showing sample data';
+    }
+  } catch (e) {
+    console.error('Network error:', e);
+    if (syncLabel) syncLabel.textContent = 'Offline — showing cached data';
+  }
 }
 
 function doLogout() {
-  apiKey = '';
-  localStorage.removeItem('omnia_key');
   localStorage.removeItem('omnia_name');
+  staffName = '';
   document.getElementById('app').style.display = 'none';
   document.getElementById('thread').style.display = 'none';
   document.getElementById('login').style.display = 'flex';
-  document.getElementById('k-key').value = '';
 }
 
-if (apiKey) { showApp(); }
+if (staffName) { showApp(); }
 
 function setChannel(ch, el) {
   channel = ch;
@@ -544,27 +564,65 @@ function setCmpCh(ch) {
   cmpCh = ch;
   document.getElementById('cmp-sms').classList.toggle('on', ch==='sms');
   document.getElementById('cmp-email').classList.toggle('on', ch==='email');
-  document.getElementById('cmp-input').placeholder = ch==='sms' ? 'Type an SMS…' : 'Type an email reply…';
+  document.getElementById('cmp-input').placeholder = ch==='sms' ? 'Type a text… (opens Messages to send)' : 'Type an email… (opens Mail to send)';
 }
 
 function doSend() {
+  if (!currentId) return;
+  const c = convos.find(x=>x.id===currentId);
+  if (!c) return;
   const input = document.getElementById('cmp-input');
   const text = input.value.trim();
-  if (!text || !currentId) return;
+
+  // Hand off to native Messages / Mail with body pre-filled.
+  // Note: sends from staff's personal device, not the Klaviyo toll-free.
+  let url;
+  if (cmpCh === 'sms') {
+    if (!c.phone) { alert('No phone number on file for this lead.'); return; }
+    url = `sms:${c.phone}` + (text ? `?body=${encodeURIComponent(text)}` : '');
+  } else {
+    if (!c.email) { alert('No email on file for this lead.'); return; }
+    const subject = encodeURIComponent('Following up — Omnia Fitness Collective');
+    url = `mailto:${c.email}?subject=${subject}` + (text ? `&body=${encodeURIComponent(text)}` : '');
+  }
+
+  // Log outreach locally so the dashboard reflects the attempt.
+  if (text) {
+    const now = new Date();
+    const time = now.toLocaleTimeString([],{hour:'numeric',minute:'2-digit'});
+    c.msgs.push({dir:'out',ch:cmpCh,text,time,sender:staffName,note:'sent via device'});
+    c.lastMsg = text; c.lastTime = time;
+    input.value = ''; input.style.height = 'auto';
+    renderMsgs(c);
+    renderList();
+  }
+
+  // Open native handler
+  window.location.href = url;
+}
+
+function quickAction(kind) {
+  if (!currentId) return;
   const c = convos.find(x=>x.id===currentId);
-  const now = new Date();
-  const time = now.toLocaleTimeString([],{hour:'numeric',minute:'2-digit'});
-  c.msgs.push({dir:'out',ch:cmpCh,text,time,sender:staffName});
-  c.lastMsg = text; c.lastTime = time;
-  input.value = ''; input.style.height = 'auto';
-  renderMsgs(c);
+  if (!c) return;
+  if (kind === 'call') {
+    if (!c.phone) return alert('No phone on file.');
+    window.location.href = `tel:${c.phone}`;
+  } else if (kind === 'sms') {
+    if (!c.phone) return alert('No phone on file.');
+    window.location.href = `sms:${c.phone}`;
+  } else if (kind === 'email') {
+    if (!c.email) return alert('No email on file.');
+    const subject = encodeURIComponent('Following up — Omnia Fitness Collective');
+    window.location.href = `mailto:${c.email}?subject=${subject}`;
+  }
 }
 
 function onKey(e) { if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();doSend();} }
 function autoH(el) { el.style.height='auto'; el.style.height=Math.min(el.scrollHeight,120)+'px'; }
 
 function doRefresh() {
-  document.getElementById('last-sync').textContent = 'Synced just now';
+  loadProfiles();
 }
 
 function aiSuggest() {
