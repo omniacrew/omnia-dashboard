@@ -79,12 +79,19 @@ export default async function handler(req, res) {
 
 function formatTime(iso) {
   if (!iso) return '';
+  const tz = 'America/Denver';
   const d = new Date(iso);
   const now = new Date();
-  const sameDay = d.toDateString() === now.toDateString();
   const yesterday = new Date(now); yesterday.setDate(yesterday.getDate() - 1);
-  const isYesterday = d.toDateString() === yesterday.toDateString();
-  if (sameDay) return d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
-  if (isYesterday) return 'Yesterday';
-  return d.toLocaleDateString([], { month: 'short', day: 'numeric' });
+
+  // Get date strings in Denver time for accurate same-day / yesterday comparison
+  const denverDate = d.toLocaleDateString('en-US', { timeZone: tz });
+  const todayDenver = now.toLocaleDateString('en-US', { timeZone: tz });
+  const yesterdayDenver = yesterday.toLocaleDateString('en-US', { timeZone: tz });
+
+  if (denverDate === todayDenver) {
+    return d.toLocaleTimeString('en-US', { timeZone: tz, hour: 'numeric', minute: '2-digit' });
+  }
+  if (denverDate === yesterdayDenver) return 'Yesterday';
+  return d.toLocaleDateString('en-US', { timeZone: tz, month: 'short', day: 'numeric' });
 }
