@@ -817,8 +817,10 @@ async function loadProfiles() {
     if (!res.ok) throw new Error('Failed');
     const data = await res.json();
     profiles = (data.profiles || data || []).filter(p => {
-      const interest = (p.interest || p.omnia_interest || '').toLowerCase();
-      return interest && interest !== 'newsletter' && interest !== 'soft';
+      const tags = (p.tags || []).map(t => String(t).toLowerCase());
+      // Drop pure newsletter/soft inquiries; keep anyone with a real lead tag
+      if (tags.length === 0) return false;
+      return !tags.every(t => t === 'newsletter' || t === 'soft');
     });
     document.getElementById('sync-status').textContent = `Synced ${new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})}`;
     renderLeadCards();
@@ -832,12 +834,12 @@ async function loadProfiles() {
 function getClassificationForProfile(profile) {
   const meta = contactMeta[profile.id];
   if (meta?.classification) return meta.classification;
-  // Auto-classify from Klaviyo interest field
-  const interest = (profile.interest || profile.omnia_interest || '').toLowerCase();
-  if (interest.includes('membership')) return 'lead-membership';
-  if (interest.includes('personal') || interest.includes('pt')) return 'lead-pt';
-  if (interest.includes('nutrition')) return 'lead-nutrition';
-  if (interest.includes('general')) return 'lead-general';
+  // Auto-classify from Klaviyo tags array
+  const tags = (profile.tags || []).map(t => String(t).toLowerCase());
+  if (tags.includes('membership')) return 'lead-membership';
+  if (tags.includes('pt') || tags.includes('personal')) return 'lead-pt';
+  if (tags.includes('nutrition')) return 'lead-nutrition';
+  if (tags.includes('general')) return 'lead-general';
   return 'lead-general';
 }
 
@@ -885,13 +887,15 @@ function renderLeadCards() {
   container.innerHTML = filtered.map(p => {
     const cls = getClassificationForProfile(p);
     const clsInfo = CLASSIFICATIONS[cls] || {};
-    const name = [p.first_name, p.last_name].filter(Boolean).join(' ') || p.email || 'Unknown';
+    const name = p.name || p.email || 'Unknown';
     const initials = name.split(' ').map(n => n[0]).join('').slice(0,2).toUpperCase();
     const colors = avatarColor(p.id);
     const meta = contactMeta[p.id] || {};
-    const lastMsg = meta.lastMessagePreview || '';
-    const lastTime = meta.lastMessageTime ? formatTime(meta.lastMessageTime) : formatTime(p.created || '');
-    const hasUnread = meta.hasUnread;
+    // Prefer KV-stored conversation preview, fall back to endpoint's form preview
+    const lastMsg = meta.lastMessagePreview || p.lastMsg || '';
+    const lastTime = meta.lastMessageTime ? formatTime(meta.lastMessageTime) : (p.lastTime || formatTime(p.created || ''));
+    const primaryTag = (p.tags || [])[0] || 'Contact';
+    const hasUnread = meta.hasUnread !== undefined ? meta.hasUnread : p.unread;
 
     return `
       <div class="lead-card ${hasUnread ? 'unread' : ''}" data-id="${p.id}" onclick="openConversation('${p.id}')">
@@ -901,7 +905,7 @@ function renderLeadCards() {
         <div class="lead-info">
           <div class="lead-name">${escHtml(name)}</div>
           <div class="lead-meta">
-            <span class="lead-type-badge">${escHtml(p.interest || p.omnia_interest || 'Contact')}</span>
+            <span class="lead-type-badge">${escHtml(primaryTag)}</span>
             <span class="lead-preview">${escHtml(lastMsg || p.phone || p.email || '')}</span>
           </div>
         </div>
@@ -927,7 +931,7 @@ async function openConversation(profileId) {
   document.getElementById('lead-list-view').style.display = 'none';
   document.getElementById('conversation-view').classList.add('visible');
 
-  const name = [currentProfile.first_name, currentProfile.last_name].filter(Boolean).join(' ') || currentProfile.email || 'Unknown';
+  const name = currentProfile.name || currentProfile.email || 'Unknown';
   document.getElementById('conv-name').textContent = name;
   document.getElementById('conv-subname').textContent = currentProfile.phone || currentProfile.email || '';
 
@@ -951,17 +955,31 @@ async function loadThread() {
   if (!currentProfile) return;
   const messages = document.getElementById('conv-messages');
 
+  // Build seed messages from the form submission the endpoint already gave us
+  const seedMsgs = (currentProfile.msgs || []).map(m => ({
+    id: 'seed-' + (m.time || Math.random()),
+    body: m.text || '',
+    datetime: currentProfile.created || '',
+    direction: m.dir === 'in' ? 'inbound' : 'outbound',
+    channel: m.ch || 'form',
+    isSeed: true,
+  }));
+
   try {
     const res = await fetch(`/api/thread?profileId=${currentProfile.id}&apiKey=${encodeURIComponent(apiKey)}`);
     if (!res.ok) throw new Error('Failed');
     const data = await res.json();
 
-    if (data.messages && data.messages.length > 0) {
-      renderThread(data.messages);
-      // Update preview in contact meta
-      const last = data.messages[data.messages.length - 1];
+    const apiMsgs = data.messages || [];
+
+    // Merge: form submission context first, then live SMS thread
+    const combined = [...seedMsgs, ...apiMsgs];
+
+    if (combined.length > 0) {
+      renderThread(combined);
+      const last = combined[combined.length - 1];
       await saveContactMeta(currentProfile.id, {
-        lastMessagePreview: last.body.slice(0, 60),
+        lastMessagePreview: (last.body || '').slice(0, 60),
         lastMessageTime: last.datetime,
       });
     } else {
@@ -974,7 +992,12 @@ async function loadThread() {
       `;
     }
   } catch (e) {
-    messages.innerHTML = `<div class="thread-empty">Could not load messages.<br><span style="font-size:12px;color:var(--text3)">Check that your API key has Conversations scope.</span></div>`;
+    // API failed but we can still show the form submission context
+    if (seedMsgs.length > 0) {
+      renderThread(seedMsgs);
+    } else {
+      messages.innerHTML = `<div class="thread-empty">Could not load messages.<br><span style="font-size:12px;color:var(--text3)">Check that your API key has Conversations scope.</span></div>`;
+    }
   }
 }
 
