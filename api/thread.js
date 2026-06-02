@@ -1,5 +1,7 @@
-// api/thread.js — Fetch SMS conversation thread for a profile
-// GET /api/thread?profileId=xxx&apiKey=xxx
+// api/thread.js — Fetch SMS conversation thread from the Events API
+// GET /api/thread?profileId=xxx
+// Reads "Received SMS" (inbound) and "Sent SMS" (outbound) events for the profile.
+// Works with a standard private API key (no Conversations API enablement needed).
 
 const KLAVIYO_API_VERSION = '2026-04-15';
 
@@ -19,68 +21,80 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: 'Server is missing Klaviyo configuration.' });
   }
 
+  const headers = {
+    Authorization: `Klaviyo-API-Key ${apiKey}`,
+    revision: KLAVIYO_API_VERSION,
+    Accept: 'application/json',
+  };
+
   try {
-    // Fetch profile with conversation included
-    const profileRes = await fetch(
-      `https://a.klaviyo.com/api/profiles/${profileId}/?include=conversation`,
-      {
-        headers: {
-          Authorization: `Klaviyo-API-Key ${apiKey}`,
-          revision: KLAVIYO_API_VERSION,
-          Accept: 'application/json',
-        },
+    // Fetch recent events for this profile, newest first, with the metric included
+    // so we can tell which events are SMS (and inbound vs outbound).
+    const filter = encodeURIComponent(`equals(profile_id,"${profileId}")`);
+    const url = `https://a.klaviyo.com/api/events/?filter=${filter}&include=metric&sort=-datetime&page[size]=50`;
+
+    const eventsRes = await fetch(url, { headers });
+
+    if (!eventsRes.ok) {
+      const err = await eventsRes.json();
+      return res.status(eventsRes.status).json({ error: 'Failed to fetch events', detail: err });
+    }
+
+    const data = await eventsRes.json();
+
+    // Build a map of metric id -> metric name from the included metrics
+    const metricNames = {};
+    (data.included || []).forEach(inc => {
+      if (inc.type === 'metric') {
+        metricNames[inc.id] = inc.attributes?.name || '';
       }
-    );
+    });
 
-    if (!profileRes.ok) {
-      const err = await profileRes.json();
-      return res.status(profileRes.status).json({ error: 'Failed to fetch profile', detail: err });
-    }
+    // SMS-related metric names we care about
+    // Inbound (from lead): "Received Inbound SMS" / "Consented to Receive SMS" varies;
+    // the reliable inbound metric for replies is "Received Inbound SMS" or "Received SMS"
+    // depending on account. We classify by name heuristics below.
+    const messages = [];
 
-    const profileData = await profileRes.json();
+    (data.data || []).forEach(ev => {
+      const metricId = ev.relationships?.metric?.data?.id;
+      const metricName = (metricNames[metricId] || '').toLowerCase();
+      const props = ev.attributes?.event_properties || {};
+      const datetime = ev.attributes?.datetime || ev.attributes?.timestamp || '';
 
-    // Find conversation in included
-    let conversationId = null;
-    if (profileData.included) {
-      const conv = profileData.included.find(i => i.type === 'conversation');
-      if (conv) conversationId = conv.id;
-    }
-
-    if (!conversationId) {
-      // No conversation yet — return empty thread
-      return res.json({ messages: [], conversationId: null });
-    }
-
-    // Fetch messages for this conversation
-    const messagesRes = await fetch(
-      `https://a.klaviyo.com/api/conversations/${conversationId}/conversation-messages/?sort=-datetime`,
-      {
-        headers: {
-          Authorization: `Klaviyo-API-Key ${apiKey}`,
-          revision: KLAVIYO_API_VERSION,
-          Accept: 'application/json',
-        },
+      // Outbound: messages we sent (our "Dashboard SMS" event, or Klaviyo "Sent SMS")
+      if (metricName.includes('dashboard sms')) {
+        messages.push({
+          id: ev.id,
+          body: props.message || '',
+          datetime,
+          direction: 'outbound',
+          channel: 'sms',
+        });
       }
-    );
+      // Inbound: replies from the lead
+      else if (
+        metricName.includes('received inbound sms') ||
+        metricName.includes('inbound sms') ||
+        (metricName.includes('received') && metricName.includes('sms') && !metricName.includes('automated'))
+      ) {
+        // Inbound SMS body is usually in event properties — field name varies
+        const body =
+          props.text || props.message || props.body || props['Message Body'] || props['message_body'] || '';
+        messages.push({
+          id: ev.id,
+          body: body || '(inbound message)',
+          datetime,
+          direction: 'inbound',
+          channel: 'sms',
+        });
+      }
+    });
 
-    if (!messagesRes.ok) {
-      const err = await messagesRes.json();
-      return res.status(messagesRes.status).json({ error: 'Failed to fetch messages', detail: err });
-    }
+    // chronological order (oldest first)
+    messages.sort((a, b) => new Date(a.datetime || 0) - new Date(b.datetime || 0));
 
-    const messagesData = await messagesRes.json();
-
-    // Normalize messages into a simple format
-    const messages = (messagesData.data || []).map(m => ({
-      id: m.id,
-      body: m.attributes?.body || '',
-      datetime: m.attributes?.datetime || m.attributes?.created_at || '',
-      direction: m.attributes?.direction || 'outbound', // 'inbound' | 'outbound'
-      status: m.attributes?.status || '',
-      channel: m.attributes?.channel || 'sms',
-    })).reverse(); // chronological order
-
-    return res.json({ messages, conversationId });
+    return res.json({ messages, source: 'events' });
 
   } catch (e) {
     return res.status(500).json({ error: 'Internal error', detail: e.message });
