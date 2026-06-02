@@ -1,8 +1,8 @@
 // api/kv.js — Upstash KV for contact classifications + archive status
-// Env vars auto-injected by Vercel/Upstash: UPSTASH_REDIS_REST_URL, UPSTASH_REDIS_REST_TOKEN
+// Env vars auto-injected by Vercel/Upstash integration: KV_REST_API_URL, KV_REST_API_TOKEN
 
-const KV_URL   = process.env.UPSTASH_REDIS_REST_URL;
-const KV_TOKEN = process.env.UPSTASH_REDIS_REST_TOKEN;
+const KV_URL   = process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL;
+const KV_TOKEN = process.env.KV_REST_API_TOKEN || process.env.UPSTASH_REDIS_REST_TOKEN;
 
 async function kv(command, ...args) {
   const res = await fetch(`${KV_URL}/${command}/${args.map(encodeURIComponent).join('/')}`, {
