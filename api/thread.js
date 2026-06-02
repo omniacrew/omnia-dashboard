@@ -10,9 +10,13 @@ export default async function handler(req, res) {
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' });
 
-  const { profileId, apiKey } = req.query;
-  if (!profileId || !apiKey) {
-    return res.status(400).json({ error: 'profileId and apiKey are required' });
+  const { profileId } = req.query;
+  const apiKey = process.env.KLAVIYO_PRIVATE_API_KEY;
+  if (!profileId) {
+    return res.status(400).json({ error: 'profileId is required' });
+  }
+  if (!apiKey) {
+    return res.status(500).json({ error: 'Server is missing Klaviyo configuration.' });
   }
 
   try {
