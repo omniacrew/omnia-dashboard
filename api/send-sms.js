@@ -1,5 +1,7 @@
-// api/send-sms.js — Outbound SMS via Klaviyo Conversations API
-// POST { profileId, message, apiKey }
+// api/send-sms.js — Outbound SMS via Klaviyo custom event → Flow trigger
+// POST { profileId, message }
+// Fires a "Dashboard SMS" event on the profile. A Klaviyo Flow listens for this
+// event and sends an SMS with body = {{ event.message }} from the toll-free number.
 
 const KLAVIYO_API_VERSION = '2026-04-15';
 
@@ -12,6 +14,7 @@ export default async function handler(req, res) {
 
   const { profileId, message } = req.body;
   const apiKey = process.env.KLAVIYO_PRIVATE_API_KEY;
+
   if (!profileId || !message) {
     return res.status(400).json({ error: 'profileId and message are required' });
   }
@@ -23,9 +26,9 @@ export default async function handler(req, res) {
   }
 
   try {
-    // Step 1: Get or create conversation for this profile
-    const convRes = await fetch(
-      `https://a.klaviyo.com/api/profiles/${profileId}/?include=conversation`,
+    // Step 1: Look up the profile's email + phone (Events API identifies by these)
+    const profileRes = await fetch(
+      `https://a.klaviyo.com/api/profiles/${profileId}/`,
       {
         headers: {
           Authorization: `Klaviyo-API-Key ${apiKey}`,
@@ -35,43 +38,50 @@ export default async function handler(req, res) {
       }
     );
 
-    if (!convRes.ok) {
-      const err = await convRes.json();
-      return res.status(convRes.status).json({ error: 'Failed to fetch profile', detail: err });
+    if (!profileRes.ok) {
+      const err = await profileRes.json();
+      return res.status(profileRes.status).json({ error: 'Failed to fetch profile', detail: err });
     }
 
-    const profileData = await convRes.json();
+    const profileData = await profileRes.json();
+    const attrs = profileData.data?.attributes || {};
+    const email = attrs.email;
+    const phone = attrs.phone_number;
 
-    // Extract conversation ID from included data if present
-    let conversationId = null;
-    if (profileData.included) {
-      const conv = profileData.included.find(i => i.type === 'conversation');
-      if (conv) conversationId = conv.id;
+    if (!email && !phone) {
+      return res.status(400).json({ error: 'Profile has no email or phone to identify it' });
     }
 
-    // Step 2: Send the message
-    const msgBody = {
+    // Step 2: Fire the custom event that triggers the flow
+    const eventBody = {
       data: {
-        type: 'conversation-message',
+        type: 'event',
         attributes: {
-          body: message.trim(),
-        },
-        relationships: {
+          properties: {
+            message: message.trim(),
+            sent_via: 'dashboard',
+          },
+          metric: {
+            data: {
+              type: 'metric',
+              attributes: { name: 'Dashboard SMS' },
+            },
+          },
           profile: {
-            data: { type: 'profile', id: profileId }
-          }
-        }
-      }
+            data: {
+              type: 'profile',
+              attributes: {
+                ...(email ? { email } : {}),
+                ...(phone ? { phone_number: phone } : {}),
+              },
+              id: profileId,
+            },
+          },
+        },
+      },
     };
 
-    // If we have a conversation ID, attach it
-    if (conversationId) {
-      msgBody.data.relationships.conversation = {
-        data: { type: 'conversation', id: conversationId }
-      };
-    }
-
-    const sendRes = await fetch('https://a.klaviyo.com/api/conversation-messages/', {
+    const eventRes = await fetch('https://a.klaviyo.com/api/events/', {
       method: 'POST',
       headers: {
         Authorization: `Klaviyo-API-Key ${apiKey}`,
@@ -79,16 +89,16 @@ export default async function handler(req, res) {
         'Content-Type': 'application/json',
         Accept: 'application/json',
       },
-      body: JSON.stringify(msgBody),
+      body: JSON.stringify(eventBody),
     });
 
-    if (!sendRes.ok) {
-      const err = await sendRes.json();
-      return res.status(sendRes.status).json({ error: 'Failed to send message', detail: err });
+    if (!eventRes.ok && eventRes.status !== 202) {
+      const err = await eventRes.json();
+      return res.status(eventRes.status).json({ error: 'Failed to trigger SMS flow', detail: err });
     }
 
-    const sent = await sendRes.json();
-    return res.json({ ok: true, message: sent.data });
+    // Events API returns 202 Accepted with empty body on success
+    return res.json({ ok: true, queued: true });
 
   } catch (e) {
     return res.status(500).json({ error: 'Internal error', detail: e.message });
