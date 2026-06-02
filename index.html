@@ -709,8 +709,8 @@ const CLASSIFICATIONS = {
 
 // ─── INIT ─────────────────────────────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded', () => {
-  const savedKey  = sessionStorage.getItem('omnia_api_key');
-  const savedName = sessionStorage.getItem('omnia_sender_name');
+  const savedKey  = localStorage.getItem('omnia_api_key');
+  const savedName = localStorage.getItem('omnia_sender_name');
   if (savedKey) {
     apiKey = savedKey;
     senderName = savedName || '';
@@ -767,13 +767,14 @@ function handleConnect() {
   if (!key) { showToast('Please enter your API key'); return; }
   apiKey = key;
   senderName = name;
-  sessionStorage.setItem('omnia_api_key', key);
-  sessionStorage.setItem('omnia_sender_name', name);
+  localStorage.setItem('omnia_api_key', key);
+  localStorage.setItem('omnia_sender_name', name);
   showApp();
 }
 
 function handleLogout() {
-  sessionStorage.clear();
+  localStorage.removeItem('omnia_api_key');
+  localStorage.removeItem('omnia_sender_name');
   apiKey = '';
   profiles = [];
   contactMeta = {};
