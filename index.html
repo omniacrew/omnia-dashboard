@@ -966,7 +966,7 @@ async function loadThread() {
   }));
 
   try {
-    const res = await fetch(`/api/thread?profileId=${currentProfile.id}&apiKey=${encodeURIComponent(apiKey)}`);
+    const res = await fetch(`/api/thread?profileId=${currentProfile.id}`);
     if (!res.ok) throw new Error('Failed');
     const data = await res.json();
 
@@ -1072,7 +1072,7 @@ async function sendMessage() {
     const res = await fetch('/api/send-sms', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ profileId: currentProfile.id, message, apiKey }),
+      body: JSON.stringify({ profileId: currentProfile.id, message }),
     });
 
     const data = await res.json();
