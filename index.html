@@ -965,6 +965,17 @@ async function loadThread() {
     isSeed: true,
   }));
 
+  // Locally-stored outbound messages sent via the dashboard (flow-trigger model)
+  const meta = contactMeta[currentProfile.id] || {};
+  const localSent = (meta.sentMsgs || []).map(m => ({
+    id: 'local-' + m.datetime,
+    body: m.body,
+    datetime: m.datetime,
+    direction: 'outbound',
+    channel: 'sms',
+    isLocal: true,
+  }));
+
   try {
     const res = await fetch(`/api/thread?profileId=${currentProfile.id}`);
     if (!res.ok) throw new Error('Failed');
@@ -972,8 +983,10 @@ async function loadThread() {
 
     const apiMsgs = data.messages || [];
 
-    // Merge: form submission context first, then live SMS thread
-    const combined = [...seedMsgs, ...apiMsgs];
+    // Merge everything: form context + dashboard-sent + live SMS thread, sorted by time
+    const combined = [...seedMsgs, ...localSent, ...apiMsgs].sort((a, b) => {
+      return new Date(a.datetime || 0) - new Date(b.datetime || 0);
+    });
 
     if (combined.length > 0) {
       renderThread(combined);
@@ -992,9 +1005,12 @@ async function loadThread() {
       `;
     }
   } catch (e) {
-    // API failed but we can still show the form submission context
-    if (seedMsgs.length > 0) {
-      renderThread(seedMsgs);
+    // API failed but we can still show the form submission + local sent context
+    const fallback = [...seedMsgs, ...localSent].sort((a, b) =>
+      new Date(a.datetime || 0) - new Date(b.datetime || 0)
+    );
+    if (fallback.length > 0) {
+      renderThread(fallback);
     } else {
       messages.innerHTML = `<div class="thread-empty">Could not load messages.<br><span style="font-size:12px;color:var(--text3)">Check that your API key has Conversations scope.</span></div>`;
     }
@@ -1083,16 +1099,17 @@ async function sendMessage() {
       const errMsg = data.detail?.errors?.[0]?.detail || data.error || 'Failed to send';
       showToast('❌ ' + errMsg);
     } else {
-      // Update optimistic bubble time
+      // Queued successfully via flow trigger.
       const timEl = tempEl.querySelector('.msg-time');
       if (timEl) timEl.textContent = formatTime(new Date().toISOString());
-      // Save preview
+      // Persist this sent message locally so it stays in the thread
+      const sent = (contactMeta[currentProfile.id]?.sentMsgs) || [];
+      sent.push({ body: message, datetime: new Date().toISOString() });
       await saveContactMeta(currentProfile.id, {
+        sentMsgs: sent,
         lastMessagePreview: message.slice(0, 60),
         lastMessageTime: new Date().toISOString(),
       });
-      // Reload thread after short delay
-      setTimeout(loadThread, 2000);
     }
   } catch (e) {
     document.getElementById(tempId)?.remove();
