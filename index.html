@@ -969,19 +969,43 @@ function inboxFilter(profile) {
 function updateCounts() {
   const inboxes = ['all','leads','clients','pt','nutrition','crm','general','archived'];
   const saved = currentInbox;
+  const all = getAllContacts();
   inboxes.forEach(inbox => {
     currentInbox = inbox;
-    const count = profiles.filter(inboxFilter).length;
+    const count = all.filter(inboxFilter).length;
     const el = document.getElementById(`count-${inbox}`);
     if (el) el.textContent = count;
   });
   currentInbox = saved;
 }
 
+// Merge form-lead profiles with manually-added (searched) contacts stored in KV.
+// Tags/classifications in KV are the source of truth for where a contact lives.
+function getAllContacts() {
+  const byId = {};
+  // Start with form-leads feed
+  for (const p of profiles) byId[p.id] = p;
+  // Add any KV contact that isn't already in the feed (manual/searched contacts)
+  for (const [id, meta] of Object.entries(contactMeta)) {
+    if (byId[id]) continue;            // already represented by the feed
+    if (!meta || !meta.isManual) continue; // only resurrect manually-added contacts
+    byId[id] = {
+      id,
+      name: meta.name || meta.email || meta.phone || 'Unknown',
+      phone: meta.phone || '',
+      email: meta.email || '',
+      tags: [],
+      msgs: [],
+      created: meta.updatedAt || '',
+    };
+  }
+  return Object.values(byId);
+}
+
 function renderLeadCards() {
   updateCounts();
   const container = document.getElementById('lead-cards');
-  const filtered = profiles.filter(inboxFilter);
+  const filtered = getAllContacts().filter(inboxFilter);
 
   if (filtered.length === 0) {
     container.innerHTML = `<div class="empty-state"><div class="icon">📭</div><div>No contacts in this inbox</div></div>`;
@@ -1024,8 +1048,8 @@ function renderLeadCards() {
 
 // ─── CONVERSATION ─────────────────────────────────────────────────────────────
 async function openConversation(profileId, profileObj) {
-  // Use provided profile object (from search) or look up in the loaded list
-  currentProfile = profileObj || profiles.find(p => p.id === profileId);
+  // Use provided profile object (from search) or look up in the merged contact list
+  currentProfile = profileObj || getAllContacts().find(p => p.id === profileId);
   if (!currentProfile) return;
 
   // Mark read
@@ -1368,10 +1392,17 @@ function openSearchedProfile(idx) {
 
   closeSearchModal();
 
-  // Default non-funneled searched contacts to the General tab (unless already tagged)
-  if (!contactMeta[r.id]?.classification) {
-    saveContactMeta(r.id, { classification: 'general' });
-  }
+  // Persist full contact identity to KV so they appear in the list permanently,
+  // not just while loaded. Default to General tab unless already tagged.
+  const existing = contactMeta[r.id] || {};
+  saveContactMeta(r.id, {
+    classification: existing.classification || 'general',
+    name: r.name,
+    phone: r.phone,
+    email: r.email,
+    smsReady: r.smsReady,
+    isManual: true,   // flag: added via search, not the form-leads feed
+  });
 
   openConversation(r.id, profileObj);
 }
