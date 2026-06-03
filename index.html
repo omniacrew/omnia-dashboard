@@ -1335,7 +1335,11 @@ async function runSearch() {
     }
 
     if (!data.results || data.results.length === 0) {
-      resultsEl.innerHTML = `<div class="search-status">No existing contact found for "${escHtml(q)}".</div>`;
+      let extra = '';
+      if (data.type === 'name' && data.method === 'paged' && data.exhaustedAll === false) {
+        extra = '<br><span style="font-size:11px;">Searched recent contacts only — try their email or phone for older profiles.</span>';
+      }
+      resultsEl.innerHTML = `<div class="search-status">No contact found for "${escHtml(q)}".${extra}</div>`;
       return;
     }
 
