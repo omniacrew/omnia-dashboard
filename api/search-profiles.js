@@ -47,7 +47,7 @@ export default async function handler(req, res) {
   }
 
   try {
-    const url = `https://a.klaviyo.com/api/profiles/?filter=${encodeURIComponent(filter)}&page[size]=20`;
+    const url = `https://a.klaviyo.com/api/profiles/?filter=${encodeURIComponent(filter)}&additional-fields[profile]=subscriptions&page[size]=20`;
     const r = await fetch(url, { headers });
 
     if (!r.ok) {
@@ -59,10 +59,11 @@ export default async function handler(req, res) {
 
     const results = (data.data || []).map(p => {
       const a = p.attributes || {};
-      // SMS consent: check subscriptions.sms.marketing.consent === 'SUBSCRIBED'
-      const smsConsent = a.subscriptions?.sms?.marketing?.consent || null;
-      const smsTransactional = a.subscriptions?.sms?.transactional?.consent || null;
-      const smsReady = smsConsent === 'SUBSCRIBED' || smsTransactional === 'SUBSCRIBED';
+      const sms = a.subscriptions?.sms || {};
+      const smsMarketing = sms.marketing?.consent || null;
+      const smsTransactional = sms.transactional?.consent || null;
+      // Either marketing OR transactional being SUBSCRIBED means we can text them
+      const smsReady = smsMarketing === 'SUBSCRIBED' || smsTransactional === 'SUBSCRIBED';
       const name = [a.first_name, a.last_name].filter(Boolean).join(' ') || a.email || a.phone_number || 'Unknown';
       return {
         id: p.id,
@@ -72,7 +73,8 @@ export default async function handler(req, res) {
         email: a.email || '',
         phone: a.phone_number || '',
         smsReady,
-        smsConsent,
+        smsConsent: smsMarketing,
+        smsTransactional,
       };
     });
 
