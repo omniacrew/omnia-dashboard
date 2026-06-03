@@ -80,14 +80,32 @@ export default async function handler(req, res) {
       return res.json({ results, query, type: isEmail ? 'email' : 'phone' });
     }
 
-    // ── NAME: fetch pages and match case-insensitively in code ──
-    // Klaviyo's profile endpoint doesn't reliably support name `contains` filtering,
-    // so we page through profiles and match locally. Capped to keep it fast.
+    // ── NAME: try server-side contains filter first, then fall back to paging ──
     const needle = query.toLowerCase();
+
+    // Attempt 1: server-side contains filter on first/last name (works on some revisions).
+    // If Klaviyo rejects it, we silently fall back to client-side paging below.
+    try {
+      const nameFilter = `or(contains(first_name,"${query}"),contains(last_name,"${query}"))`;
+      const tryUrl = `https://a.klaviyo.com/api/profiles/?filter=${encodeURIComponent(nameFilter)}&additional-fields[profile]=subscriptions&page[size]=50`;
+      const tryRes = await fetch(tryUrl, { headers });
+      if (tryRes.ok) {
+        const tryData = await tryRes.json();
+        const results = (tryData.data || []).map(shapeProfile);
+        // Only short-circuit if the server filter actually found someone.
+        // If it returned empty, fall through to paging (the filter may be unsupported/ignored).
+        if (results.length > 0) {
+          return res.json({ results, query, type: 'name', method: 'server-filter' });
+        }
+      }
+      // non-OK or empty → fall through to paging
+    } catch (_) { /* fall through */ }
+
+    // Attempt 2: paginate and match in code. Deeper cap for larger accounts.
     const matches = [];
     let nextUrl = `https://a.klaviyo.com/api/profiles/?additional-fields[profile]=subscriptions&page[size]=100&sort=-updated`;
     let pages = 0;
-    const MAX_PAGES = 5; // up to ~500 most-recently-updated profiles
+    const MAX_PAGES = 15; // up to ~1500 most-recently-updated profiles
 
     while (nextUrl && pages < MAX_PAGES && matches.length < 25) {
       const r = await fetch(nextUrl, { headers });
@@ -109,7 +127,7 @@ export default async function handler(req, res) {
       pages++;
     }
 
-    return res.json({ results: matches, query, type: 'name', searchedPages: pages });
+    return res.json({ results: matches, query, type: 'name', method: 'paged', searchedPages: pages, exhaustedAll: !nextUrl });
 
   } catch (e) {
     return res.status(500).json({ error: 'Internal error', detail: e.message });
