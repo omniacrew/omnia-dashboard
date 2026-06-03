@@ -296,6 +296,7 @@
     .cls-pt-client       { background: #3a1a3a; color: #d946ef; }
     .cls-nutrition-client{ background: #1a2a3a; color: #38bdf8; }
     .cls-crm             { background: #3a3a1a; color: #eab308; }
+    .cls-general-contact { background: #2a2a2a; color: #9ca3af; }
     .cls-archived        { background: #1a1a1a; color: #555; }
 
     .empty-state {
@@ -535,6 +536,83 @@
     .sheet-action .icon { font-size: 20px; width: 28px; text-align: center; }
     .sheet-action.danger { color: var(--pink); }
 
+    /* ── SEARCH MODAL ── */
+    .search-modal {
+      position: fixed;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%) scale(0.96);
+      width: calc(100% - 32px);
+      max-width: 440px;
+      max-height: 80dvh;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 20px;
+      z-index: 101;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s, transform 0.2s;
+      display: flex;
+      flex-direction: column;
+    }
+    .search-modal.visible { opacity: 1; transform: translate(-50%, -50%) scale(1); pointer-events: auto; }
+    .search-modal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
+    .search-modal-title { font-size: 16px; font-weight: 600; }
+    .search-close {
+      background: none; border: none; color: var(--text2);
+      font-size: 18px; cursor: pointer; padding: 4px;
+    }
+    .search-hint { font-size: 12px; color: var(--text3); margin-bottom: 14px; line-height: 1.4; }
+    .search-input-row { display: flex; gap: 8px; margin-bottom: 14px; }
+    .search-input-row input {
+      flex: 1;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text);
+      font-family: inherit;
+      font-size: 14px;
+      padding: 11px 14px;
+      outline: none;
+    }
+    .search-input-row input:focus { border-color: var(--accent); }
+    .search-go {
+      background: var(--accent);
+      color: #000;
+      border: none;
+      border-radius: var(--radius-sm);
+      font-family: inherit;
+      font-size: 14px;
+      font-weight: 600;
+      padding: 0 18px;
+      cursor: pointer;
+    }
+    .search-go:active { opacity: 0.8; }
+    .search-results { overflow-y: auto; flex: 1; }
+    .search-result {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 4px;
+      border-bottom: 1px solid var(--border);
+      cursor: pointer;
+    }
+    .search-result:active { background: var(--surface2); }
+    .search-result-info { flex: 1; min-width: 0; }
+    .search-result-name { font-size: 14px; font-weight: 500; }
+    .search-result-contact { font-size: 12px; color: var(--text3); margin-top: 2px; }
+    .sms-pill {
+      font-size: 10px;
+      font-weight: 500;
+      padding: 2px 8px;
+      border-radius: 10px;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .sms-pill.ready { background: #1a3a1a; color: #22c55e; }
+    .sms-pill.not-ready { background: #3a1a1a; color: #ef4444; }
+    .search-status { padding: 20px; text-align: center; color: var(--text3); font-size: 13px; }
+
     /* ── TOAST ── */
     .toast {
       position: fixed;
@@ -592,6 +670,7 @@
     <div class="header-logo">Omnia<span>.</span></div>
     <div class="header-right">
       <div class="live-dot">Live</div>
+      <button class="icon-btn" id="new-convo-btn">+ New</button>
       <button class="icon-btn" id="logout-btn">↩</button>
     </div>
   </div>
@@ -606,6 +685,7 @@
       <div class="inbox-tab" data-inbox="pt">PT <span class="count" id="count-pt">0</span></div>
       <div class="inbox-tab" data-inbox="nutrition">Nutrition <span class="count" id="count-nutrition">0</span></div>
       <div class="inbox-tab" data-inbox="crm">CRM <span class="count" id="count-crm">0</span></div>
+      <div class="inbox-tab" data-inbox="general">General <span class="count" id="count-general">0</span></div>
       <div class="inbox-tab" data-inbox="archived">Archived <span class="count" id="count-archived">0</span></div>
     </div>
 
@@ -644,6 +724,7 @@
       <div class="cls-chip cls-pt-client" data-cls="pt-client">PT Client</div>
       <div class="cls-chip cls-nutrition-client" data-cls="nutrition-client">Nutrition Client</div>
       <div class="cls-chip cls-crm" data-cls="crm">CRM / Membership</div>
+      <div class="cls-chip cls-general-contact" data-cls="general">General Contact</div>
     </div>
 
     <!-- Messages -->
@@ -678,6 +759,21 @@
   </div>
 </div>
 
+<!-- New conversation / search modal -->
+<div class="sheet-overlay" id="search-overlay"></div>
+<div class="search-modal" id="search-modal">
+  <div class="search-modal-header">
+    <span class="search-modal-title">New conversation</span>
+    <button class="search-close" id="search-close">✕</button>
+  </div>
+  <p class="search-hint">Search an existing contact by email or phone number.</p>
+  <div class="search-input-row">
+    <input type="text" id="search-input" placeholder="email@example.com or (925) 555-1234" autocapitalize="off" autocomplete="off">
+    <button class="search-go" id="search-go">Search</button>
+  </div>
+  <div class="search-results" id="search-results"></div>
+</div>
+
 <!-- Toast -->
 <div class="toast" id="toast"></div>
 
@@ -704,6 +800,7 @@ const CLASSIFICATIONS = {
   'pt-client':       { label: 'PT Client',        cls: 'cls-pt-client' },
   'nutrition-client':{ label: 'Nutrition Client', cls: 'cls-nutrition-client' },
   'crm':             { label: 'CRM / Membership', cls: 'cls-crm' },
+  'general':         { label: 'General Contact',  cls: 'cls-general-contact' },
   'archived':        { label: 'Archived',         cls: 'cls-archived' },
 };
 
@@ -720,6 +817,11 @@ window.addEventListener('DOMContentLoaded', () => {
   document.getElementById('connect-btn').addEventListener('click', handleConnect);
   document.getElementById('api-key-input').addEventListener('keydown', e => { if (e.key === 'Enter') handleConnect(); });
   document.getElementById('logout-btn').addEventListener('click', handleLogout);
+  document.getElementById('new-convo-btn').addEventListener('click', openSearchModal);
+  document.getElementById('search-close').addEventListener('click', closeSearchModal);
+  document.getElementById('search-overlay').addEventListener('click', closeSearchModal);
+  document.getElementById('search-go').addEventListener('click', runSearch);
+  document.getElementById('search-input').addEventListener('keydown', e => { if (e.key === 'Enter') runSearch(); });
   document.getElementById('refresh-btn').addEventListener('click', loadProfiles);
   document.getElementById('conv-back').addEventListener('click', showLeadList);
   document.getElementById('conv-more-btn').addEventListener('click', openActionSheet);
@@ -859,12 +961,13 @@ function inboxFilter(profile) {
     case 'pt':        return cls === 'pt-client' || cls === 'lead-pt';
     case 'nutrition': return cls === 'nutrition-client' || cls === 'lead-nutrition';
     case 'crm':       return cls === 'crm';
+    case 'general':   return cls === 'general';
     default:          return true;
   }
 }
 
 function updateCounts() {
-  const inboxes = ['all','leads','clients','pt','nutrition','crm','archived'];
+  const inboxes = ['all','leads','clients','pt','nutrition','crm','general','archived'];
   const saved = currentInbox;
   inboxes.forEach(inbox => {
     currentInbox = inbox;
@@ -920,8 +1023,9 @@ function renderLeadCards() {
 }
 
 // ─── CONVERSATION ─────────────────────────────────────────────────────────────
-async function openConversation(profileId) {
-  currentProfile = profiles.find(p => p.id === profileId);
+async function openConversation(profileId, profileObj) {
+  // Use provided profile object (from search) or look up in the loaded list
+  currentProfile = profileObj || profiles.find(p => p.id === profileId);
   if (!currentProfile) return;
 
   // Mark read
@@ -1174,6 +1278,104 @@ function emailCurrentProfile() {
 }
 
 // ─── HELPERS ─────────────────────────────────────────────────────────────────
+// ─── SEARCH / NEW CONVERSATION ────────────────────────────────────────────────
+function openSearchModal() {
+  document.getElementById('search-overlay').classList.add('visible');
+  document.getElementById('search-modal').classList.add('visible');
+  document.getElementById('search-results').innerHTML = '';
+  const input = document.getElementById('search-input');
+  input.value = '';
+  setTimeout(() => input.focus(), 100);
+}
+
+function closeSearchModal() {
+  document.getElementById('search-overlay').classList.remove('visible');
+  document.getElementById('search-modal').classList.remove('visible');
+}
+
+async function runSearch() {
+  const input = document.getElementById('search-input');
+  const q = input.value.trim();
+  const resultsEl = document.getElementById('search-results');
+  if (!q) return;
+
+  resultsEl.innerHTML = '<div class="search-status">Searching…</div>';
+
+  try {
+    const res = await fetch(`/api/search-profiles?q=${encodeURIComponent(q)}`);
+    const data = await res.json();
+
+    if (!res.ok) {
+      resultsEl.innerHTML = `<div class="search-status">${escHtml(data.error || 'Search failed')}</div>`;
+      return;
+    }
+
+    if (!data.results || data.results.length === 0) {
+      resultsEl.innerHTML = `<div class="search-status">No existing contact found for "${escHtml(q)}".</div>`;
+      return;
+    }
+
+    resultsEl.innerHTML = data.results.map(r => {
+      const pill = r.smsReady
+        ? '<span class="sms-pill ready">SMS ✓</span>'
+        : '<span class="sms-pill not-ready">No SMS consent</span>';
+      const contact = [r.phone, r.email].filter(Boolean).join(' · ');
+      // Stash the profile object on a data attribute via a global registry
+      const idx = searchResultRegistry.push(r) - 1;
+      return `
+        <div class="search-result" onclick="openSearchedProfile(${idx})">
+          <div class="search-result-info">
+            <div class="search-result-name">${escHtml(r.name)}</div>
+            <div class="search-result-contact">${escHtml(contact)}</div>
+          </div>
+          ${pill}
+        </div>
+      `;
+    }).join('');
+
+  } catch (e) {
+    resultsEl.innerHTML = '<div class="search-status">Network error — try again.</div>';
+  }
+}
+
+// Registry to pass full profile objects from search results into the conversation view
+let searchResultRegistry = [];
+
+function openSearchedProfile(idx) {
+  const r = searchResultRegistry[idx];
+  if (!r) return;
+
+  if (!r.phone) {
+    showToast('This contact has no phone number on file');
+    return;
+  }
+  if (!r.smsReady) {
+    showToast('⚠️ Not SMS-subscribed — message may not send');
+  }
+
+  // Shape the searched profile to match what the conversation view expects
+  const profileObj = {
+    id: r.id,
+    name: r.name,
+    first_name: r.first_name,
+    last_name: r.last_name,
+    phone: r.phone,
+    email: r.email,
+    tags: [],          // no lead tag — it's an existing/non-funneled contact
+    msgs: [],          // no form submission seed
+    created: '',
+  };
+
+  closeSearchModal();
+
+  // Default non-funneled searched contacts to the General tab (unless already tagged)
+  if (!contactMeta[r.id]?.classification) {
+    saveContactMeta(r.id, { classification: 'general' });
+  }
+
+  openConversation(r.id, profileObj);
+}
+
 function showToast(msg, duration = 2500) {
   const toast = document.getElementById('toast');
   toast.textContent = msg;
